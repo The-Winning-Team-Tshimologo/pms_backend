@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  mysql:
+    container_name: mysql-sql-bsn
+    image: mysql:latest
+    environment:
+      MYSQL_DATABASE: pmsDB
+      MYSQL_USER: username
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: rootpassword
+    volumes:
+      - mysql:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    networks:
+      - pms-backend
+    restart: unless-stopped
+  
+  mail-dev:
+    container_name: mail-dev-bsn
+    image: maildev/maildev
+    ports:
+      - "1080:1080"
+      - "1025:1025"
+
+networks:
+  pms-backend:
+    driver: bridge
+
+volumes:
+  mysql:
+    driver: local
