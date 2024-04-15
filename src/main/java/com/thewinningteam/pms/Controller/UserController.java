@@ -4,37 +4,55 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thewinningteam.pms.DTO.CustomerDTO;
 import com.thewinningteam.pms.DTO.LoginDTO;
+import com.thewinningteam.pms.Repository.TokenRepository;
 import com.thewinningteam.pms.Service.CustomerService;
+import com.thewinningteam.pms.emailservice.EmailService;
 import com.thewinningteam.pms.Service.ServiceProviderService;
+import com.thewinningteam.pms.emailservice.EmailTemplateName;
 import com.thewinningteam.pms.model.Customer;
 import com.thewinningteam.pms.model.Profile;
 import com.thewinningteam.pms.model.ServiceProvider;
+import com.thewinningteam.pms.model.Token;
+import jakarta.mail.MessagingException;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.security.SecureRandom;
+import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.Random;
 
 @RestController
 @CrossOrigin("*")
-@AllArgsConstructor
+
+@RequiredArgsConstructor
 @RequestMapping("auth")
 public class UserController {
-    private CustomerService customerService;
-    private ObjectMapper objectMapper;
-    private ServiceProviderService serviceProviderService;
 
+    private final CustomerService customerService;
+    private final ObjectMapper objectMapper;
+    private final ServiceProviderService serviceProviderService;
+    private final TokenRepository tokenRepository;
+    private final EmailService emailService;
+
+
+    @Value("${application.mailing.frontend.activation-url}")
+    private String activationUrl;
 
 
     @PostMapping("/register")
     public ResponseEntity<String> registerCustomer(@RequestBody Customer customer) {
         try {
             Customer savedCustomer = customerService.SaveCustomer(customer);
+            sendValidationEmail(savedCustomer);
             return new ResponseEntity<>("Customer created successfully.", HttpStatus.CREATED);
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | MessagingException e) {
             if (e.getMessage().equals("A customer with the same email or username already exists.")) {
                 return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
             } else {
@@ -43,17 +61,63 @@ public class UserController {
         }
     }
 
+    private void sendValidationEmail(Customer customer) throws MessagingException {
+        var newToken = generateAndSaveActivationToken(customer);
+        // send email
+        emailService.sendEmail(customer.getEmail(),
+                customer.getName(),
+                EmailTemplateName.ACTIVATE_ACCOUNT,
+                activationUrl,
+                newToken,
+                "Account activation"
+                );
+    }
+
+    private String generateAndSaveActivationToken(Customer customer) {
+
+        // generate a token
+        
+        String generatedToken = generateActivationCode(6);
+        var token = Token.builder()
+                .token(generatedToken)
+                .createdAt(LocalDateTime.now())
+                .expiresAt(LocalDateTime.now().plusMinutes(15))
+                .user(customer)
+                .build();
+        tokenRepository.save(token);
+        return  generatedToken;
+    }
+
+    private String generateActivationCode(int length) {
+
+        String CHARACTERS = "0123456789";
+
+        Random random = new SecureRandom();
+        StringBuilder codeBuilder = new StringBuilder();
+
+        for (int i = 0; i < length; i++) {
+            int randomIndex = random.nextInt(CHARACTERS.length());
+            codeBuilder.append(CHARACTERS.charAt(randomIndex));
+        }
+
+        return codeBuilder.toString();
+
+    }
+
     @PostMapping("/register2")
     public ResponseEntity<String> uploadDataAndImage(@RequestParam("data") String data,
                                                      @RequestParam(value = "image", required = false) MultipartFile image) {
         try {
             Customer customer = objectMapper.readValue(data, Customer.class);
 
+
             if (image != null && !image.isEmpty()) {
                 customer.setProfilePicture(image.getBytes());
             }
 
             Customer savedCustomer = customerService.SaveCustomer(customer);
+            sendValidationEmail(customer);
+
             return new ResponseEntity<>("Customer created successfully.", HttpStatus.CREATED);
 
         } catch (JsonProcessingException e) {
@@ -66,6 +130,8 @@ public class UserController {
             }
         } catch (IOException e) {
             return new ResponseEntity<>("An error occurred while processing the image.", HttpStatus.BAD_REQUEST);
+        } catch (MessagingException e) {
+            throw new RuntimeException(e);
         }
 
 
@@ -85,7 +151,7 @@ public class UserController {
     public ResponseEntity<CustomerDTO> getCustomerById(@PathVariable Long customerId) {
         Optional<CustomerDTO> customerDTOOptional = customerService.GetCustomerById(customerId);
         return customerDTOOptional
-                .map(customerDTO -> ResponseEntity.ok(customerDTO))
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
