@@ -17,11 +17,6 @@ public class Role {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long roleId;
 
-    @ManyToMany(mappedBy = "roles")
-    @JsonIgnore
-
-    private List<User> users;
-
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
     private ERole name;

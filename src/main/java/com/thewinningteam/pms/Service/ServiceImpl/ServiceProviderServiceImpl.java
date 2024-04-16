@@ -42,7 +42,7 @@ public class ServiceProviderServiceImpl implements ServiceProviderService {
 
         Role role = roleRepository.findByName(ERole.ROLE_CUSTOMER).orElseThrow(() -> new IllegalArgumentException("Role not found."));
 
-        serviceProvider.setRoles((List<Role>) role);
+        serviceProvider.setRoles((Role) role);
 
         System.out.println(serviceProvider.getProfile());
 

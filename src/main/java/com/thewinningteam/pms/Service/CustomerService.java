@@ -8,7 +8,7 @@ import java.util.Optional;
 
 public interface CustomerService {
     public Customer SaveCustomer(Customer customer);
-    public String Login (LoginDTO loginDTO);
+
     public Optional<CustomerDTO> GetCustomerById(Long userID);
     public void DeleteCustomerById(Long id);
     public Optional<CustomerDTO> updateCustomer(Customer updatedCustomer);

@@ -39,34 +39,22 @@ public class CustomerServiceImpl implements CustomerService {
         if (existingCustomer != null) {
             throw new IllegalArgumentException("A customer with the same email or username already exists.");
         }
+
         Address address = customer.getAddress();
         address = addressRepository.save(address);
-
         customer.setAddress(address);
+
         customer.setPassword(passwordEncoder.encode(customer.getPassword()));
-//        Long roleID = 1L;
-//        Role role = roleRepository.findById(roleID).orElseThrow(() -> new IllegalArgumentException("Role not found."));
-//        System.out.println("Retrieved Role: " + role);
 
-        Role role = roleRepository.findByName(ERole.ROLE_CUSTOMER).orElseThrow(() -> new IllegalArgumentException("Role not found."));
+        Role role = roleRepository.findByName(ERole.ROLE_CUSTOMER)
+                .orElseThrow(() -> new IllegalArgumentException("Role not found."));
+        customer.setRoles(role);
 
-        List<Role> roles = new ArrayList<>();
-        roles.add(role);
-        customer.setRoles(roles);
-        System.out.println();
         return customerRepository.save(customer);
-//        return customer;
     }
 
-    @Override
-    public String Login(LoginDTO loginDTO) {
-        Customer customer = customerRepository.findByEmailOrUserName(loginDTO.getUsernameOrEmail(), loginDTO.getUsernameOrEmail());
-        if (customer != null && loginDTO.getPassword().equals(customer.getPassword())) {
-            return "Login successful";
-        } else {
-            return "Invalid username/email or password";
-        }
-    }
+
+
 
 
     @Override

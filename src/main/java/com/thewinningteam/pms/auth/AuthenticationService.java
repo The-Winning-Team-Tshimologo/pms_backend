@@ -6,6 +6,7 @@ import com.thewinningteam.pms.Repository.UserRepository;
 import com.thewinningteam.pms.emailservice.EmailService;
 import com.thewinningteam.pms.emailservice.EmailTemplateName;
 import com.thewinningteam.pms.model.Customer;
+import com.thewinningteam.pms.model.Role;
 import com.thewinningteam.pms.model.Token;
 import com.thewinningteam.pms.model.User;
 import com.thewinningteam.pms.request.AuthenticationRequest;
@@ -50,8 +51,12 @@ public class AuthenticationService {
         var user = ((User)auth.getPrincipal());
         claims.put("fullName", user.fullName());
         var jwtToken = jwtService.generateToken(claims, user);
+
         return AuthenticationResponse.builder()
                 .token(jwtToken)
+                .id(user.getUserId())
+                .email(user.getEmail())
+                .roles(user.getRoles().getName().toString())
                 .build();
     }
 

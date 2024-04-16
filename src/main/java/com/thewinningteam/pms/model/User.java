@@ -14,6 +14,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.security.Principal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,8 +34,8 @@ public class User implements UserDetails, Principal {
     @Column(nullable = false, unique = true, length = 100)
     private String userName;
 
-    @ManyToMany(fetch=FetchType.EAGER)
-    private List<Role> roles;
+    @ManyToOne(fetch=FetchType.EAGER)
+    private Role roles;
 
     @Column(nullable = false, unique = true, length = 100)
     private String email;
@@ -77,11 +78,11 @@ public class User implements UserDetails, Principal {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return this.roles
-                .stream()
-                .map(r-> new SimpleGrantedAuthority(r.getName().name()))
-                .collect(Collectors.toList());
+        List<GrantedAuthority> authorities = new ArrayList<>();
+        authorities.add(new SimpleGrantedAuthority(roles.getName().name()));
+        return authorities;
     }
+
 
     @Override
     public String getUsername() {
