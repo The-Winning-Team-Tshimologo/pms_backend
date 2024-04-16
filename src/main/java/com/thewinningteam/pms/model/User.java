@@ -90,12 +90,12 @@ public class User implements UserDetails, Principal {
 
     @Override
     public boolean isAccountNonExpired() {
-        return !accountLocked;
+        return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return false;
+        return true;
     }
 
     @Override
@@ -118,7 +118,7 @@ public class User implements UserDetails, Principal {
         return email;
     }
 
-    private String fullName(){
+    public String fullName(){
 
         return  firstName +" " + lastName;
     }

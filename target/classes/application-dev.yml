@@ -35,7 +35,7 @@ spring:
 application:
   security:
     jwt:
-      secret-key: p%=&tsn^dp#vh29^g&s*%f58c05a0^&kado#%xhb#yv0)6em7@=
+      secret-key: p8gttsnjdpgvh29fgxsdghf58c05a0tykadogghxhbgyv0d6em7rll
       expiration: 86400000
       
   mailing:

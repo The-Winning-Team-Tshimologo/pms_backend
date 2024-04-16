@@ -13,6 +13,7 @@ import com.thewinningteam.pms.model.ERole;
 import com.thewinningteam.pms.model.Role;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -22,11 +23,14 @@ import java.util.Optional;
 
 @Service
 @AllArgsConstructor
+
 public class CustomerServiceImpl implements CustomerService {
     private CustomerRepository customerRepository;
     private RoleRepository roleRepository;
     private ModelMapper modelMapper;
     private AddressRepository addressRepository;
+    private PasswordEncoder passwordEncoder;
+
 
 
     @Override
@@ -39,7 +43,7 @@ public class CustomerServiceImpl implements CustomerService {
         address = addressRepository.save(address);
 
         customer.setAddress(address);
-
+        customer.setPassword(passwordEncoder.encode(customer.getPassword()));
 //        Long roleID = 1L;
 //        Role role = roleRepository.findById(roleID).orElseThrow(() -> new IllegalArgumentException("Role not found."));
 //        System.out.println("Retrieved Role: " + role);

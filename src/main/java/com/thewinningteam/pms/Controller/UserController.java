@@ -6,6 +6,7 @@ import com.thewinningteam.pms.DTO.CustomerDTO;
 import com.thewinningteam.pms.DTO.LoginDTO;
 import com.thewinningteam.pms.Repository.TokenRepository;
 import com.thewinningteam.pms.Service.CustomerService;
+import com.thewinningteam.pms.auth.AuthenticationService;
 import com.thewinningteam.pms.emailservice.EmailService;
 import com.thewinningteam.pms.Service.ServiceProviderService;
 import com.thewinningteam.pms.emailservice.EmailTemplateName;
@@ -13,7 +14,10 @@ import com.thewinningteam.pms.model.Customer;
 import com.thewinningteam.pms.model.Profile;
 import com.thewinningteam.pms.model.ServiceProvider;
 import com.thewinningteam.pms.model.Token;
+import com.thewinningteam.pms.request.AuthenticationRequest;
+import com.thewinningteam.pms.response.AuthenticationResponse;
 import jakarta.mail.MessagingException;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,116 +40,32 @@ import java.util.Random;
 public class UserController {
 
     private final CustomerService customerService;
+    private final AuthenticationService service;
     private final ObjectMapper objectMapper;
     private final ServiceProviderService serviceProviderService;
     private final TokenRepository tokenRepository;
     private final EmailService emailService;
 
 
-    @Value("${application.mailing.frontend.activation-url}")
-    private String activationUrl;
+
 
 
     @PostMapping("/register")
     public ResponseEntity<String> registerCustomer(@RequestBody Customer customer) {
         try {
             Customer savedCustomer = customerService.SaveCustomer(customer);
-            sendValidationEmail(savedCustomer);
-            return new ResponseEntity<>("Customer created successfully.", HttpStatus.CREATED);
-        } catch (IllegalArgumentException | MessagingException e) {
-            if (e.getMessage().equals("A customer with the same email or username already exists.")) {
-                return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-            } else {
-                return new ResponseEntity<>("An error occurred.", HttpStatus.BAD_REQUEST);
-            }
-        }
-    }
-
-    private void sendValidationEmail(Customer customer) throws MessagingException {
-        var newToken = generateAndSaveActivationToken(customer);
-        // send email
-        emailService.sendEmail(customer.getEmail(),
-                customer.getName(),
-                EmailTemplateName.ACTIVATE_ACCOUNT,
-                activationUrl,
-                newToken,
-                "Account activation"
-                );
-    }
-
-    private String generateAndSaveActivationToken(Customer customer) {
-
-        // generate a token
-        
-        String generatedToken = generateActivationCode(6);
-        var token = Token.builder()
-                .token(generatedToken)
-                .createdAt(LocalDateTime.now())
-                .expiresAt(LocalDateTime.now().plusMinutes(15))
-                .user(customer)
-                .build();
-        tokenRepository.save(token);
-        return  generatedToken;
-    }
-
-    private String generateActivationCode(int length) {
-
-        String CHARACTERS = "0123456789";
-
-        Random random = new SecureRandom();
-        StringBuilder codeBuilder = new StringBuilder();
-
-        for (int i = 0; i < length; i++) {
-            int randomIndex = random.nextInt(CHARACTERS.length());
-            codeBuilder.append(CHARACTERS.charAt(randomIndex));
-        }
-
-        return codeBuilder.toString();
-
-    }
-
-    @PostMapping("/register2")
-    public ResponseEntity<String> uploadDataAndImage(@RequestParam("data") String data,
-                                                     @RequestParam(value = "image", required = false) MultipartFile image) {
-        try {
-            Customer customer = objectMapper.readValue(data, Customer.class);
-
-
-            if (image != null && !image.isEmpty()) {
-                customer.setProfilePicture(image.getBytes());
-            }
-
-            Customer savedCustomer = customerService.SaveCustomer(customer);
-            sendValidationEmail(customer);
 
             return new ResponseEntity<>("Customer created successfully.", HttpStatus.CREATED);
-
-        } catch (JsonProcessingException e) {
-            return new ResponseEntity<>("Invalid JSON format.", HttpStatus.BAD_REQUEST);
         } catch (IllegalArgumentException e) {
             if (e.getMessage().equals("A customer with the same email or username already exists.")) {
                 return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
             } else {
                 return new ResponseEntity<>("An error occurred.", HttpStatus.BAD_REQUEST);
             }
-        } catch (IOException e) {
-            return new ResponseEntity<>("An error occurred while processing the image.", HttpStatus.BAD_REQUEST);
-        } catch (MessagingException e) {
-            throw new RuntimeException(e);
-        }
-
-
-    }
-
-    @PostMapping("/login")
-    public ResponseEntity<String> loginCustomer(@RequestBody LoginDTO loginDTO) {
-        String result = customerService.Login(loginDTO);
-        if (result.equals("Login successful")) {
-            return new ResponseEntity<>(result, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(result, HttpStatus.UNAUTHORIZED);
         }
     }
+
+
 
     @GetMapping("/{customerId}")
     public ResponseEntity<CustomerDTO> getCustomerById(@PathVariable Long customerId) {
