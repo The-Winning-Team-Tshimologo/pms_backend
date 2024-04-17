@@ -48,7 +48,7 @@ public class CustomerServiceImpl implements CustomerService {
 
         Role role = roleRepository.findByName(ERole.ROLE_CUSTOMER)
                 .orElseThrow(() -> new IllegalArgumentException("Role not found."));
-        customer.setRoles(role);
+        customer.setRoles((Role)role);
 
         return customerRepository.save(customer);
     }

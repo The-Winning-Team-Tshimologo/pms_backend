@@ -1,6 +1,7 @@
 package com.thewinningteam.pms.security;
 
 import com.thewinningteam.pms.Repository.UserRepository;
+import com.thewinningteam.pms.model.User;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,7 +18,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String userEmail) throws UsernameNotFoundException {
-        return repository.findByEmail(userEmail)
-                .orElseThrow(()-> new UsernameNotFoundException("User not found"));
+        User userExist = repository.findByEmailOrUserName(userEmail,userEmail);
+        if (userExist == null) {
+            throw new UsernameNotFoundException("User not found");
+        }
+        return userExist ;
     }
 }

@@ -6,6 +6,7 @@ import com.thewinningteam.pms.Service.ServiceProviderService;
 import com.thewinningteam.pms.model.*;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,6 +22,7 @@ public class ServiceProviderServiceImpl implements ServiceProviderService {
     private ProfileRepository profileRepository;
     private WorkExperienceRepository workExperienceRepository;
     private EducationRepository educationRepository;
+    private PasswordEncoder passwordEncoder;
 
 
 
@@ -40,7 +42,7 @@ public class ServiceProviderServiceImpl implements ServiceProviderService {
 ////        System.out.println("Retrieved Role: " + role);
 //        serviceProvider.setRole(role);
 
-        Role role = roleRepository.findByName(ERole.ROLE_CUSTOMER).orElseThrow(() -> new IllegalArgumentException("Role not found."));
+        Role role = roleRepository.findByName(ERole.ROLE_SERVICE_PROVIDER).orElseThrow(() -> new IllegalArgumentException("Role not found."));
 
         serviceProvider.setRoles((Role) role);
 
@@ -66,6 +68,7 @@ public class ServiceProviderServiceImpl implements ServiceProviderService {
                 educationRepository.save(education);
             }
         }
+        serviceProvider.setPassword(passwordEncoder.encode(serviceProvider.getPassword()));
 
         serviceProvider.setProfile(profile);
 

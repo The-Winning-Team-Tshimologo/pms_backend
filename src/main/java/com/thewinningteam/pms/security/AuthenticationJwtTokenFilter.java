@@ -30,7 +30,6 @@ public class AuthenticationJwtTokenFilter extends OncePerRequestFilter {
            @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         if(request.getServletPath().contains("/api/v1/**")){
-            System.out.println("test");
             filterChain.doFilter(request, response);
             return;
         }
@@ -45,6 +44,7 @@ public class AuthenticationJwtTokenFilter extends OncePerRequestFilter {
 
         jwt = authHeader.substring(7);
         userEmail = jwtService.extractUsername(jwt);
+
         if(userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null){
             UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
             if(jwtService.isTokenValid(jwt, userDetails)){
@@ -59,5 +59,9 @@ public class AuthenticationJwtTokenFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+
+
+
+
     }
 }

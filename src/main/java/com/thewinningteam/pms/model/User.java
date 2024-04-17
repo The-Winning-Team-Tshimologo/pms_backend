@@ -80,13 +80,14 @@ public class User implements UserDetails, Principal {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<GrantedAuthority> authorities = new ArrayList<>();
         authorities.add(new SimpleGrantedAuthority(roles.getName().name()));
+        System.out.println(roles.getName().name());
         return authorities;
     }
 
 
     @Override
     public String getUsername() {
-        return null;
+        return userName;
     }
 
     @Override

@@ -80,6 +80,7 @@ public class JwtService {
                 .map(GrantedAuthority::getAuthority)
                 .toList();
 
+        System.out.println("get username when you generate token: "+userDetails.getUsername());
 
         return Jwts
                 .builder()
