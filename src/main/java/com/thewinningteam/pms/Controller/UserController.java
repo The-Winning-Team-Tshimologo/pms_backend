@@ -46,10 +46,6 @@ public class UserController {
     private final TokenRepository tokenRepository;
     private final EmailService emailService;
 
-
-
-
-
     @PostMapping("/register")
     public ResponseEntity<String> registerCustomer(@RequestBody Customer customer) {
         try {

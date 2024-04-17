@@ -71,6 +71,8 @@ public class AuthenticationService {
                 .orElseThrow(()-> new UsernameNotFoundException("User not found"));
         user.setEnabled(true);
         userRepository.save((Customer)user);
+        savedToken.setValidatedAt(LocalDateTime.now());
+        tokenRepository.save(savedToken);
     }
 
     void sendValidationEmail(Customer customer) throws MessagingException {
