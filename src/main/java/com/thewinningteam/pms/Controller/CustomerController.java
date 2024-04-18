@@ -20,7 +20,7 @@ import java.util.Optional;
 @RestController
 @CrossOrigin("*")
 @RequiredArgsConstructor
-@RequestMapping("customer")
+@RequestMapping("auth")
 public class CustomerController {
 
     private final CustomerService customerService;
@@ -61,10 +61,19 @@ public class CustomerController {
         return ResponseEntity.ok("test"+ customerId);
     }
 
-    @PreAuthorize("hasRole('ROLE_CUSTOMER')")
-    @PostMapping("logissue/{customerId}/{spId}")
+  @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PostMapping("/logissue/{customerId}/{spId}")
     public ResponseEntity<String> updateCustomerd(@PathVariable Long customerId,
                                                   @PathVariable(required = false) Long spId,@RequestParam("data") String data){
         return ResponseEntity.ok("test"+ spId);
+    }
+
+    @PreAuthorize("hasRole('ROLE_CUSTOMER')")
+    @GetMapping("get-customer/{customerId}")
+    public ResponseEntity<CustomerDTO> getCustomerById(@PathVariable Long customerId) {
+        Optional<CustomerDTO> customerDTOOptional = customerService.GetCustomerById(customerId);
+        return customerDTOOptional
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 }

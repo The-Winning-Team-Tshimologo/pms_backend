@@ -5,6 +5,7 @@ import com.thewinningteam.pms.Repository.TokenRepository;
 import com.thewinningteam.pms.Repository.UserRepository;
 import com.thewinningteam.pms.emailservice.EmailService;
 import com.thewinningteam.pms.emailservice.EmailTemplateName;
+import com.thewinningteam.pms.exception.GlobalExceptionHandler;
 import com.thewinningteam.pms.model.Customer;
 import com.thewinningteam.pms.model.Role;
 import com.thewinningteam.pms.model.Token;
@@ -62,15 +63,20 @@ public class AuthenticationService {
 
     public void activateAccount(String token) throws MessagingException {
         Token savedToken = tokenRepository.findByToken(token)
-                .orElseThrow(()-> new IllegalArgumentException("Invalid token"));
-        if(LocalDateTime.now().isAfter(savedToken.getExpiresAt())){
-           sendValidationEmail((Customer) savedToken.getUser());
-           throw   new RuntimeException("Activation token has expired");
+                .orElseThrow(() -> new GlobalExceptionHandler.InvalidTokenException("Invalid token"));
+
+        if (LocalDateTime.now().isAfter(savedToken.getExpiresAt())) {
+            sendValidationEmail((Customer) savedToken.getUser());
+            throw new GlobalExceptionHandler.TokenExpiredException("Activation token has expired. Please check your " +
+                    "emails for a new token it will expire in 15 minutes.");
         }
+
         var user = userRepository.findById(savedToken.getUser().getUserId())
-                .orElseThrow(()-> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
         user.setEnabled(true);
-        userRepository.save((Customer)user);
+        userRepository.save((Customer) user);
+
         savedToken.setValidatedAt(LocalDateTime.now());
         tokenRepository.save(savedToken);
     }

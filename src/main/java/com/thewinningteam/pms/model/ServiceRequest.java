@@ -9,7 +9,8 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Service {
+@Table(name ="service")
+public class ServiceRequest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "service_id")
@@ -37,10 +38,9 @@ public class Service {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;
+
+    @ManyToOne
+    @JoinColumn(name = "service_provider_id")
+    private ServiceProvider serviceProvider;
 }
 
-enum ServiceStatus {
-    PENDING,
-    REJECTED,
-    ACCEPTED
-}

@@ -13,6 +13,9 @@ import com.thewinningteam.pms.model.ServiceProvider;
 import com.thewinningteam.pms.model.Token;
 import com.thewinningteam.pms.request.AuthenticationRequest;
 import com.thewinningteam.pms.response.AuthenticationResponse;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
@@ -32,6 +35,13 @@ import java.util.Random;
 @RequestMapping("auth")
 @RequiredArgsConstructor
 @Tag(name = "Authentication")
+@SecurityRequirement(name = "Authorization")
+@SecurityScheme(
+        name = "Authorization",
+        type = SecuritySchemeType.HTTP,
+        bearerFormat = "JWT",
+        scheme = "bearer"
+)
 public class AuthenticationController {
 
     private final CustomerService customerService;
@@ -104,6 +114,7 @@ public class AuthenticationController {
             ServiceProvider serviceProvider = objectMapper.readValue(data, ServiceProvider.class);
             Profile spProfile = objectMapper.readValue(profile, Profile.class);
 
+            serviceProvider.setEnabled(true);
             if (profilePicture != null && !profilePicture.isEmpty()) {
                 serviceProvider.setProfilePicture(profilePicture.getBytes());
             }

@@ -16,17 +16,5 @@ public class RoleInitializer {
         this.roleRepository = roleRepository;
     }
 
-    @Bean
-    public CommandLineRunner initializeRoles() {
-        return args -> {
-           // roleService.initializeRoles()
-            for (ERole roleName : ERole.values()) {
-                if (!roleRepository.existsByName(roleName)) {
-                    Role role = new Role();
-                    role.setName(roleName);
-                    roleRepository.save(role);
-                }
-            }
-        };
-    }
+
 }

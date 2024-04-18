@@ -13,7 +13,7 @@ import java.util.List;
 public class Customer extends User {
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
-    private List<Service> service;
+    private List<ServiceRequest> service;
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
     private List<Review> reviews;
 }

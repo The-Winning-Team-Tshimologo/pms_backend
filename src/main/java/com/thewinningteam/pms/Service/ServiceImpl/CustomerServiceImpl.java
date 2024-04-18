@@ -3,6 +3,7 @@ package com.thewinningteam.pms.Service.ServiceImpl;
 
 import com.thewinningteam.pms.DTO.CustomerDTO;
 import com.thewinningteam.pms.DTO.LoginDTO;
+import com.thewinningteam.pms.DTO.RoleDTO;
 import com.thewinningteam.pms.Repository.AddressRepository;
 import com.thewinningteam.pms.Repository.CustomerRepository;
 import com.thewinningteam.pms.Repository.RoleRepository;
@@ -60,7 +61,12 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public Optional<CustomerDTO> GetCustomerById(Long id) {
         Optional<Customer> customerOptional = customerRepository.findById(id);
-        return customerOptional.map(customer -> modelMapper.map(customer, CustomerDTO.class));
+
+        return customerOptional.map(customer -> {
+            CustomerDTO customerDTO = modelMapper.map(customer, CustomerDTO.class);
+            customerDTO.setRole(modelMapper.map(customer.getRoles(), RoleDTO.class));
+            return customerDTO;
+        });
     }
 
     @Override

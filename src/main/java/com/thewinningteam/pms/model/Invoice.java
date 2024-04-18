@@ -25,7 +25,7 @@ public class Invoice {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "service_id")
-    private Service service;
+    private ServiceRequest service;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "method")

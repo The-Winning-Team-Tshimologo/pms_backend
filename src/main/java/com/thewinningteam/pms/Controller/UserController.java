@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -36,7 +37,7 @@ import java.util.Random;
 @CrossOrigin("*")
 
 @RequiredArgsConstructor
-@RequestMapping("auth")
+@RequestMapping("user")
 public class UserController {
 
     private final CustomerService customerService;
@@ -63,6 +64,7 @@ public class UserController {
 
 
 
+//    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/{customerId}")
     public ResponseEntity<CustomerDTO> getCustomerById(@PathVariable Long customerId) {
         Optional<CustomerDTO> customerDTOOptional = customerService.GetCustomerById(customerId);
