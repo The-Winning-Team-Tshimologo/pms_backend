@@ -55,8 +55,3 @@ public class ServiceProvider extends User {
 }
 
 
-enum AcceptanceStatus {
-    PENDING,
-    REJECTED,
-    ACCEPTED
-}

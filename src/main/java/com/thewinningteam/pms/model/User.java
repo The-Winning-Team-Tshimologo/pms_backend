@@ -1,5 +1,6 @@
 package com.thewinningteam.pms.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -72,7 +73,7 @@ public class User implements UserDetails, Principal {
 
    //  Define the owning side of the relationship
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "address_id")
+    @JoinColumn(name = "address_id") @JsonIgnore
     private Address address;
 
 

@@ -20,7 +20,7 @@ import java.util.Optional;
 @RestController
 @CrossOrigin("*")
 @RequiredArgsConstructor
-@RequestMapping("auth")
+@RequestMapping("customer")
 public class CustomerController {
 
     private final CustomerService customerService;

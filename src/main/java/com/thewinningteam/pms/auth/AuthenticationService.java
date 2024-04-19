@@ -16,11 +16,13 @@ import com.thewinningteam.pms.security.JwtService;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
@@ -61,7 +63,7 @@ public class AuthenticationService {
                 .build();
     }
 
-    public void activateAccount(String token) throws MessagingException {
+    public ResponseEntity<String> activateAccount(String token) throws MessagingException {
         Token savedToken = tokenRepository.findByToken(token)
                 .orElseThrow(() -> new GlobalExceptionHandler.InvalidTokenException("Invalid token"));
 
@@ -79,6 +81,7 @@ public class AuthenticationService {
 
         savedToken.setValidatedAt(LocalDateTime.now());
         tokenRepository.save(savedToken);
+        return ResponseEntity.ok("Token activated successfully");
     }
 
     void sendValidationEmail(Customer customer) throws MessagingException {
