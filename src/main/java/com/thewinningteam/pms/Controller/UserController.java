@@ -24,12 +24,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.Random;
 
@@ -62,9 +66,25 @@ public class UserController {
         }
     }
 
+    @PreAuthorize("hasRole('ROLE_CUSTOMER')")
+    @GetMapping("/profile")
+    public ResponseEntity<Customer> getUserProfile() {
+        // Get the authentication object from the SecurityContextHolder
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        // Retrieve information about the authenticated user
+        String username = authentication.getName(); // Get the username
+        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities(); // Get the authorities
+
+        // You can customize this part based on your user model
+        Customer userProfile = new Customer ();
+
+        return ResponseEntity.ok(userProfile);
+    }
 
 
-//    @PreAuthorize("hasRole('ROLE_ADMIN')")
+
+ @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/{customerId}")
     public ResponseEntity<CustomerDTO> getCustomerById(@PathVariable Long customerId) {
         Optional<CustomerDTO> customerDTOOptional = customerService.GetCustomerById(customerId);

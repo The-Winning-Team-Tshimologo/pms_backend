@@ -2,24 +2,25 @@ package com.thewinningteam.pms.Service.ServiceImpl;
 
 
 import com.thewinningteam.pms.DTO.CustomerDTO;
+import com.thewinningteam.pms.DTO.CustomerServiceDTO;
 import com.thewinningteam.pms.DTO.LoginDTO;
 import com.thewinningteam.pms.DTO.RoleDTO;
 import com.thewinningteam.pms.Repository.AddressRepository;
+import com.thewinningteam.pms.Repository.AppointmentRepository;
 import com.thewinningteam.pms.Repository.CustomerRepository;
 import com.thewinningteam.pms.Repository.RoleRepository;
 import com.thewinningteam.pms.Service.CustomerService;
-import com.thewinningteam.pms.model.Address;
-import com.thewinningteam.pms.model.Customer;
-import com.thewinningteam.pms.model.ERole;
-import com.thewinningteam.pms.model.Role;
+import com.thewinningteam.pms.model.*;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -31,6 +32,8 @@ public class CustomerServiceImpl implements CustomerService {
     private ModelMapper modelMapper;
     private AddressRepository addressRepository;
     private PasswordEncoder passwordEncoder;
+
+    private AppointmentRepository appointmentRepository;
 
 
 
@@ -52,6 +55,32 @@ public class CustomerServiceImpl implements CustomerService {
         customer.setRoles((Role)role);
 
         return customerRepository.save(customer);
+    }
+
+    @Override
+    public List<CustomerServiceDTO> getAllServicesForConnectedCustomer(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("User not authenticated");
+        }
+        Long customerId = extractCustomerId(authentication);
+
+        return appointmentRepository.findAllByCustomerUserId(customerId)
+                .stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    private CustomerServiceDTO mapToDTO(Appointment appointment) {
+        CustomerServiceDTO dto = new CustomerServiceDTO();
+        dto.setAppointmentDate(appointment.getAppointmentDate());
+        dto.setServiceProviderName(appointment.getServiceProvider().getName());
+        return dto;
+    }
+
+    // Helper method to extract customerId from Authentication
+    private Long extractCustomerId(Authentication authentication) {
+        Customer customer = (Customer) authentication.getPrincipal();
+        return customer.getUserId();
     }
 
 

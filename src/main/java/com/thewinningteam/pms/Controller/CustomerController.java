@@ -4,6 +4,7 @@ package com.thewinningteam.pms.Controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thewinningteam.pms.DTO.CustomerDTO;
+import com.thewinningteam.pms.DTO.CustomerServiceDTO;
 import com.thewinningteam.pms.Service.CustomerService;
 import com.thewinningteam.pms.auth.AuthenticationService;
 import com.thewinningteam.pms.model.Customer;
@@ -11,10 +12,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -28,8 +31,12 @@ public class CustomerController {
 
     @PreAuthorize("hasRole('ROLE_CUSTOMER')")
     @PutMapping("/{customerId}")
-    public ResponseEntity<String> updateCustomer2(@PathVariable Long customerId, @RequestParam("data") String data,
-                                                  @RequestParam(value = "image", required = false) MultipartFile image) {
+    public ResponseEntity<String> updateCustomer2(
+            @PathVariable Long customerId,
+            @RequestParam("data") String data,
+            @RequestParam(value = "image", required = false) MultipartFile image
+    )
+    {
 
         try {
             Customer updatedCustomer = objectMapper.readValue(data, Customer.class);
@@ -67,6 +74,8 @@ public class CustomerController {
                                                   @PathVariable(required = false) Long spId,@RequestParam("data") String data){
         return ResponseEntity.ok("test"+ spId);
     }
+
+
 
     @PreAuthorize("hasRole('ROLE_CUSTOMER')")
     @GetMapping("get-customer/{customerId}")

@@ -2,6 +2,7 @@ package com.thewinningteam.pms.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -9,6 +10,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @Table(name ="service")
 public class ServiceRequest {
     @Id
@@ -28,7 +30,7 @@ public class ServiceRequest {
     private String description;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status")
+    @Column(name = "status", length = 255)
     private ServiceStatus status = ServiceStatus.PENDING;
 
     @ManyToOne(fetch = FetchType.LAZY)
