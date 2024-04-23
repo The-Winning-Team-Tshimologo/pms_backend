@@ -12,14 +12,15 @@ public class AppointmentDTO {
     private String serviceProviderFirstName;
     private String serviceProviderLastName;
     private ServiceStatus serviceStatus;
+    private boolean appointmentSet; // Flag indicating if appointment is set
 
-    public AppointmentDTO(Date appointmentDate, String serviceProviderFirstName, String serviceProviderLastName, ServiceStatus serviceStatus) {
+    public AppointmentDTO(Date appointmentDate, String serviceProviderFirstName, String serviceProviderLastName, ServiceStatus serviceStatus, boolean appointmentSet) {
         this.appointmentDate = appointmentDate;
         this.serviceProviderFirstName = serviceProviderFirstName;
         this.serviceProviderLastName = serviceProviderLastName;
         this.serviceStatus = serviceStatus;
+        this.appointmentSet = appointmentSet;
     }
-
 
     // Getters and setters
 }

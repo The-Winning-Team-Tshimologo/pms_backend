@@ -57,25 +57,9 @@ public class CustomerServiceImpl implements CustomerService {
         return customerRepository.save(customer);
     }
 
-    @Override
-    public List<CustomerServiceDTO> getAllServicesForConnectedCustomer(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new RuntimeException("User not authenticated");
-        }
-        Long customerId = extractCustomerId(authentication);
 
-        return appointmentRepository.findAllByCustomerUserId(customerId)
-                .stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
-    }
 
-    private CustomerServiceDTO mapToDTO(Appointment appointment) {
-        CustomerServiceDTO dto = new CustomerServiceDTO();
-        dto.setAppointmentDate(appointment.getAppointmentDate());
-        dto.setServiceProviderName(appointment.getServiceProvider().getName());
-        return dto;
-    }
+
 
     // Helper method to extract customerId from Authentication
     private Long extractCustomerId(Authentication authentication) {

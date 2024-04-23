@@ -1,24 +1,27 @@
 package com.thewinningteam.pms.Service.ServiceImpl;
 
-import com.thewinningteam.pms.DTO.AddressDTO;
+import com.thewinningteam.pms.DTO.BrowseServiceProviderDTO;
+
+import com.thewinningteam.pms.DTO.RequestSystemWideDTO;
 import com.thewinningteam.pms.DTO.ServiceDTO;
 import com.thewinningteam.pms.Repository.CustomerRepository;
 import com.thewinningteam.pms.Repository.ServiceProviderRepository;
 import com.thewinningteam.pms.Repository.ServiceRepository;
 import com.thewinningteam.pms.Service.CategoryService;
 import com.thewinningteam.pms.Service.ServiceRequestService;
-import com.thewinningteam.pms.exception.AuthenticationException;
 import com.thewinningteam.pms.exception.ServiceProviderNotFoundException;
 import com.thewinningteam.pms.model.*;
-import com.thewinningteam.pms.serviceMapper.ServiceMapper;
+import com.thewinningteam.pms.mapper.ServiceMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.Hibernate;
+import org.modelmapper.ModelMapper;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -34,6 +37,7 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
     private final CategoryService categoryService;
     private final CustomerRepository customerRepository;
     private final ServiceMapper serviceMapper;
+    private final ModelMapper modelMapper;
 
     @Override
     public void createServiceRequest(
@@ -88,6 +92,46 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
     }
 
     @Override
+    public void createServiceRequestSystemWide(
+            ServiceRequest request,
+            Authentication connectedUser,
+            Long categoryId,
+            String description,
+            Address address) {
+        // Retrieve the logged-in customer from the Authentication object
+        Customer customer = (Customer) connectedUser.getPrincipal();
+
+        // Set the logged-in customer to the service request
+        request.setCustomer(customer);
+        request.setDescription(description);
+
+        // Set the service status to PENDING (or any default status)
+        request.setStatus(ServiceStatus.PENDING);
+
+        // Set the address to the service request
+        request.setAddress(address);
+
+            // Retrieve the category by ID
+            Optional<Category> optionalCategory = categoryService.getCategoryById(categoryId);
+
+            // Check if the category exists
+            if (optionalCategory.isPresent()) {
+                Category category = optionalCategory.get();
+                // Set the retrieved category to the request
+                request.setCategory(category);
+            } else {
+                // If the category with the given ID does not exist, throw an exception or handle the case accordingly
+                throw new EntityNotFoundException("Category with ID " + categoryId + " not found.");
+            }
+
+            // Save the service request
+            serviceRepository.save(request);
+
+    }
+
+
+
+    @Override
     public List<ServiceDTO> findServiceRequestsWithCustomerByConnectedServiceProvider() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -121,7 +165,20 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
+    @Override
+    public List<RequestSystemWideDTO> findAllServiceRequestedSystemWide(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("User not authenticated");
+        }
 
+        // Check if the user is a service provider
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        if (!userDetails.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SERVICE_PROVIDER"))) {
+            throw new AccessDeniedException("User is not a service provider");
+        }
+
+        return serviceRepository.findAllWithoutServiceProvider();
+    }
     @Override
     public void acceptServiceRequest(Long serviceRequestId) {
         // Get the authentication object from the security context

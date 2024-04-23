@@ -11,7 +11,7 @@ import java.util.List;
 @Repository
 public interface AppointmentRepository extends JpaRepository<Appointment,Long> {
 
-    @Query("SELECT NEW com.thewinningteam.pms.DTO.AppointmentDTO(a.appointmentDate, sp.firstName, sp.lastName, sr.status) " +
+    @Query("SELECT NEW com.thewinningteam.pms.DTO.AppointmentDTO(a.appointmentDate, sp.firstName, sp.lastName, sr.status, true) " +
             "FROM Appointment a " +
             "JOIN a.serviceProvider sp " +
             "JOIN a.service sr " +

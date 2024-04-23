@@ -38,6 +38,9 @@ public class ServiceProvider extends User {
     private AcceptanceStatus acceptanceStatus = AcceptanceStatus.PENDING;
 
     @OneToOne(fetch = FetchType.LAZY)
+    private Category category;
+
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "profile_id")
     private Profile profile;
 

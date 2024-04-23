@@ -1,6 +1,7 @@
 package com.thewinningteam.pms.Controller;
 
 import com.thewinningteam.pms.DTO.CreateServiceRequestDTO;
+import com.thewinningteam.pms.DTO.RequestSystemWideDTO;
 import com.thewinningteam.pms.DTO.ServiceDTO;
 import com.thewinningteam.pms.Service.ServiceImpl.ServiceRequestServiceImpl;
 import com.thewinningteam.pms.exception.AuthenticationException;
@@ -11,6 +12,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -54,6 +56,42 @@ public class ServiceController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("An error occurred while processing the request.");
+        }
+    }
+
+    @PostMapping("/create/{categoryId}")
+    public ResponseEntity<?> createServiceRequest(
+            @RequestBody CreateServiceRequestDTO createServiceRequestDTO,
+            Authentication authentication,
+            @PathVariable Long categoryId) {
+
+        // Check if the user is authenticated
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
+        }
+
+        try {
+            requestService.createServiceRequestSystemWide( new ServiceRequest(),
+                    authentication,
+                    categoryId,
+                    createServiceRequestDTO.getDescription(),
+                    createServiceRequestDTO.getAddress());
+
+            return ResponseEntity.ok("Service request created successfully");
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while processing the request");
+        }
+    }
+
+    @GetMapping("/system-wide")
+    public ResponseEntity<List<RequestSystemWideDTO>> getAllServiceRequestsSystemWide(Authentication authentication) {
+        try {
+            List<RequestSystemWideDTO> serviceRequests = requestService.findAllServiceRequestedSystemWide(authentication);
+            return ResponseEntity.ok(serviceRequests);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // or HttpStatus.FORBIDDEN for access denied
         }
     }
 

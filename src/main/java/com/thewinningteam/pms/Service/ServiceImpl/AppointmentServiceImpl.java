@@ -66,8 +66,22 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         Long customerId = extractCustomerId(authentication);
 
-        return appointmentRepository.findAllByCustomerId(customerId);
+        List<AppointmentDTO> appointments = appointmentRepository.findAllByCustomerId(customerId);
+
+        // Iterate over appointments to check if appointment is set
+        for (AppointmentDTO appointment : appointments) {
+            if (appointment.getAppointmentDate() == null) {
+                // If appointment date is null, set appointmentSet flag to false
+                appointment.setAppointmentSet(false);
+            } else {
+                // If appointment date is not null, set appointmentSet flag to true
+                appointment.setAppointmentSet(true);
+            }
+        }
+
+        return appointments;
     }
+
 
 
     // Helper method to extract customerId from Authentication

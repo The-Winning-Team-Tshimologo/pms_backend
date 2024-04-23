@@ -10,6 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -35,12 +36,18 @@ public class AppointmentController {
 
     @PreAuthorize("hasRole('ROLE_CUSTOMER')")
     @GetMapping("/all")
-    public ResponseEntity<List<AppointmentDTO>> getAllAppointmentsForConnectedCustomer(Authentication authentication) {
+    public ResponseEntity<?> getAppointments(Authentication authentication) {
         try {
             List<AppointmentDTO> appointments = appointmentService.findAllAppointmentsForConnectedCustomer(authentication);
+            for (AppointmentDTO appointment : appointments) {
+                if (!appointment.isAppointmentSet()) {
+                    // Redirect to appointment page
+                    return ResponseEntity.status(HttpStatus.FOUND).location(URI.create("/appointment-page")).build();
+                }
+            }
             return ResponseEntity.ok(appointments);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
 

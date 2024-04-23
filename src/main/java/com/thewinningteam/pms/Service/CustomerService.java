@@ -11,7 +11,6 @@ import java.util.Optional;
 
 public interface CustomerService {
     public Customer SaveCustomer(Customer customer);
-    List<CustomerServiceDTO> getAllServicesForConnectedCustomer(Authentication authentication);
 
     public Optional<CustomerDTO> GetCustomerById(Long userID);
     public void DeleteCustomerById(Long id);

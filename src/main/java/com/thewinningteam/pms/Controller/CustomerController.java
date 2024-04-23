@@ -27,39 +27,7 @@ import java.util.Optional;
 public class CustomerController {
 
     private final CustomerService customerService;
-    private final ObjectMapper objectMapper;
 
-    @PreAuthorize("hasRole('ROLE_CUSTOMER')")
-    @PutMapping("/{customerId}")
-    public ResponseEntity<String> updateCustomer2(
-            @PathVariable Long customerId,
-            @RequestParam("data") String data,
-            @RequestParam(value = "image", required = false) MultipartFile image
-    )
-    {
-
-        try {
-            Customer updatedCustomer = objectMapper.readValue(data, Customer.class);
-
-            if (image != null && !image.isEmpty()) {
-                updatedCustomer.setProfilePicture(image.getBytes());
-            }
-
-            updatedCustomer.setUserId(customerId);
-            Optional<CustomerDTO> optionalCustomer = customerService.updateCustomer(updatedCustomer);
-            return optionalCustomer
-                    .map(customer -> new ResponseEntity<>("User updated successfully", HttpStatus.OK))
-                    .orElseGet(() -> new ResponseEntity<>("User not found with id: " + customerId, HttpStatus.NOT_FOUND));
-
-        } catch (JsonProcessingException e) {
-            return new ResponseEntity<>("Invalid JSON format.", HttpStatus.BAD_REQUEST);
-        } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>("An error occurred.", HttpStatus.BAD_REQUEST);
-
-        } catch (IOException e) {
-            return new ResponseEntity<>("An error occurred while processing the image.", HttpStatus.BAD_REQUEST);
-        }
-    }
 
 
     @PreAuthorize("hasRole('ROLE_CUSTOMER')")
@@ -68,12 +36,6 @@ public class CustomerController {
         return ResponseEntity.ok("test"+ customerId);
     }
 
-  @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @PostMapping("/logissue/{customerId}/{spId}")
-    public ResponseEntity<String> updateCustomerd(@PathVariable Long customerId,
-                                                  @PathVariable(required = false) Long spId,@RequestParam("data") String data){
-        return ResponseEntity.ok("test"+ spId);
-    }
 
 
 

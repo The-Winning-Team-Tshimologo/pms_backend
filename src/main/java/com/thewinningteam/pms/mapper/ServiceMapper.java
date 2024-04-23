@@ -1,4 +1,4 @@
-package com.thewinningteam.pms.serviceMapper;
+package com.thewinningteam.pms.mapper;
 
 import com.thewinningteam.pms.DTO.ServiceDTO;
 import com.thewinningteam.pms.model.ServiceRequest;

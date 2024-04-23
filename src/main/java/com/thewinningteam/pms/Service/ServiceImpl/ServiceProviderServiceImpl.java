@@ -1,28 +1,34 @@
 package com.thewinningteam.pms.Service.ServiceImpl;
 
+import com.thewinningteam.pms.DTO.BrowseServiceProviderDTO;
 import com.thewinningteam.pms.DTO.ServiceProviderDTO;
 import com.thewinningteam.pms.Repository.*;
 import com.thewinningteam.pms.Service.ServiceProviderService;
+import com.thewinningteam.pms.mapper.AddressMapper;
 import com.thewinningteam.pms.model.*;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import org.hibernate.Hibernate;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class ServiceProviderServiceImpl implements ServiceProviderService {
-    private ServiceProviderRepository serviceProviderRepository;
-    private RoleRepository roleRepository;
-    private ModelMapper modelMapper;
-    private AddressRepository addressRepository;
-    private ProfileRepository profileRepository;
-    private WorkExperienceRepository workExperienceRepository;
-    private EducationRepository educationRepository;
-    private PasswordEncoder passwordEncoder;
+    private final ServiceProviderRepository serviceProviderRepository;
+    private final RoleRepository roleRepository;
+    private final ModelMapper modelMapper;
+    private final AddressRepository addressRepository;
+    private final ProfileRepository profileRepository;
+    private final WorkExperienceRepository workExperienceRepository;
+    private final EducationRepository educationRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final AddressMapper addressMapper;
 
 
 
@@ -95,4 +101,24 @@ public class ServiceProviderServiceImpl implements ServiceProviderService {
     public Optional<ServiceProviderDTO> updateCustomer(ServiceProvider updatedServiceProvider) {
         return Optional.empty();
     }
+
+    @Override
+    public List<BrowseServiceProviderDTO> browseServiceProviders() {
+        List<ServiceProvider> serviceProviders = serviceProviderRepository.findAll();
+        return serviceProviders.stream()
+                .map(this::mapToBrowseServiceProviderDTO)
+                .collect(Collectors.toList());
+    }
+
+    public BrowseServiceProviderDTO mapToBrowseServiceProviderDTO(ServiceProvider serviceProvider) {
+        BrowseServiceProviderDTO dto = new BrowseServiceProviderDTO();
+        dto.setFirstName(serviceProvider.getFirstName());
+        dto.setLastName(serviceProvider.getLastName());
+        dto.setRating(serviceProvider.getRating());
+        dto.setAddress(addressMapper.toDTO(serviceProvider.getAddress()));
+        dto.setPictures(serviceProvider.getProfilePicture());
+        return dto;
+    }
+
+
 }
