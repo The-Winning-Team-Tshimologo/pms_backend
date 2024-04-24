@@ -25,6 +25,8 @@ public interface ServiceRequestService {
           String description,
           Address address);
   List<RequestSystemWideDTO> findAllServiceRequestedSystemWide(Authentication authentication);
+
+  void confirmCompletedProject(Long serviceRequestId, Authentication authentication);
     // Add more methods as needed
 }
 

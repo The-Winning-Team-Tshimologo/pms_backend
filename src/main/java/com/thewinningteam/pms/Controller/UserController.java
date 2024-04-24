@@ -51,20 +51,7 @@ public class UserController {
     private final TokenRepository tokenRepository;
     private final EmailService emailService;
 
-    @PostMapping("/register")
-    public ResponseEntity<String> registerCustomer(@RequestBody Customer customer) {
-        try {
-            Customer savedCustomer = customerService.SaveCustomer(customer);
 
-            return new ResponseEntity<>("Customer created successfully.", HttpStatus.CREATED);
-        } catch (IllegalArgumentException e) {
-            if (e.getMessage().equals("A customer with the same email or username already exists.")) {
-                return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-            } else {
-                return new ResponseEntity<>("An error occurred.", HttpStatus.BAD_REQUEST);
-            }
-        }
-    }
 
     @PreAuthorize("hasRole('ROLE_CUSTOMER')")
     @GetMapping("/profile")

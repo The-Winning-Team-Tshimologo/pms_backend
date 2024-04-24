@@ -53,7 +53,6 @@ public class User implements UserDetails, Principal {
     @Column(length = 20)
     private String mobile;
 
-    private Integer rating;
 
     private boolean accountLocked;
 

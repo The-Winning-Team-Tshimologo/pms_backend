@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CustomerService {
-    public Customer SaveCustomer(Customer customer);
+    void signUpCustomer(CustomerDTO customerDTO);
 
     public Optional<CustomerDTO> GetCustomerById(Long userID);
     public void DeleteCustomerById(Long id);

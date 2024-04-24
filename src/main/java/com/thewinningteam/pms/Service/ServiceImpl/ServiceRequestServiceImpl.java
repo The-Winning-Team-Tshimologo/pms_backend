@@ -46,7 +46,8 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
             Long serviceProviderId,
             Long categoryId,
             String description,
-            Address address) {
+            Address address)
+    {
         // Retrieve the logged-in customer from the Authentication object
         Customer customer = (Customer) connectedUser.getPrincipal();
 
@@ -97,7 +98,9 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
             Authentication connectedUser,
             Long categoryId,
             String description,
-            Address address) {
+            Address address)
+
+    {
         // Retrieve the logged-in customer from the Authentication object
         Customer customer = (Customer) connectedUser.getPrincipal();
 
@@ -178,6 +181,38 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
         }
 
         return serviceRepository.findAllWithoutServiceProvider();
+    }
+
+    @Override
+    public void confirmCompletedProject(Long serviceRequestId, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("User not authenticated");
+        }
+
+        // Check if the authentication principal is a connected service provider
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        if (!userDetails.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SERVICE_PROVIDER"))) {
+            throw new AccessDeniedException("User is not a connected service provider");
+        }
+
+        // Get the connected service provider
+        ServiceProvider serviceProvider = (ServiceProvider) userDetails;
+
+        // Retrieve the service request by its ID
+        Optional<ServiceRequest> optionalServiceRequest = serviceRepository.findById(serviceRequestId);
+        if (optionalServiceRequest.isEmpty()) {
+            throw new IllegalArgumentException("Service request not found");
+        }
+        ServiceRequest serviceRequest = optionalServiceRequest.get();
+
+//        // Check if the service request belongs to the connected service provider
+//        if (!serviceRequest.getServiceProvider().equals(serviceProvider)) {
+//            throw new AccessDeniedException("Service request does not belong to the connected service provider");
+//        }
+
+        // Confirm the completion of the project
+        serviceRequest.setCompleted(true);
+        serviceRepository.save(serviceRequest);
     }
     @Override
     public void acceptServiceRequest(Long serviceRequestId) {

@@ -114,9 +114,22 @@ public class ServiceProviderServiceImpl implements ServiceProviderService {
         BrowseServiceProviderDTO dto = new BrowseServiceProviderDTO();
         dto.setFirstName(serviceProvider.getFirstName());
         dto.setLastName(serviceProvider.getLastName());
-        dto.setRating(serviceProvider.getRating());
         dto.setAddress(addressMapper.toDTO(serviceProvider.getAddress()));
         dto.setPictures(serviceProvider.getProfilePicture());
+
+        // Calculate average rating
+        List<Review> reviews = serviceProvider.getReviews();
+        if (reviews != null && !reviews.isEmpty()) {
+            double averageRating = reviews.stream()
+                    .mapToDouble(Review::getRating)
+                    .average()
+                    .orElse(0.0);
+            dto.setRating(averageRating);
+        } else {
+            // No reviews available, set default rating to 0
+            dto.setRating(0.0);
+        }
+
         return dto;
     }
 

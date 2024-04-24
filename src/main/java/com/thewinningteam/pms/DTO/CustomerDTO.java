@@ -17,9 +17,6 @@ public class CustomerDTO {
     private String firstName;
     private String lastName;
     private String mobile;
-    private int rating;
-    private RoleDTO role;
-   // private Set<String> role;
     private AddressDTO address;
     private byte[]  profilePicture;
 }

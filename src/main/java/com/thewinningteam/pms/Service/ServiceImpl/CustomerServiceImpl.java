@@ -1,17 +1,12 @@
 package com.thewinningteam.pms.Service.ServiceImpl;
 
 
-import com.thewinningteam.pms.DTO.CustomerDTO;
-import com.thewinningteam.pms.DTO.CustomerServiceDTO;
-import com.thewinningteam.pms.DTO.LoginDTO;
-import com.thewinningteam.pms.DTO.RoleDTO;
-import com.thewinningteam.pms.Repository.AddressRepository;
-import com.thewinningteam.pms.Repository.AppointmentRepository;
-import com.thewinningteam.pms.Repository.CustomerRepository;
-import com.thewinningteam.pms.Repository.RoleRepository;
+import com.thewinningteam.pms.DTO.*;
+import com.thewinningteam.pms.Repository.*;
 import com.thewinningteam.pms.Service.CustomerService;
 import com.thewinningteam.pms.model.*;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,38 +19,60 @@ import java.util.stream.Collectors;
 
 
 @Service
-@AllArgsConstructor
 
+@RequiredArgsConstructor
 public class CustomerServiceImpl implements CustomerService {
-    private CustomerRepository customerRepository;
-    private RoleRepository roleRepository;
-    private ModelMapper modelMapper;
-    private AddressRepository addressRepository;
-    private PasswordEncoder passwordEncoder;
+   private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final ModelMapper modelMapper;
+    private final AddressRepository addressRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final CustomerRepository customerRepository;
 
-    private AppointmentRepository appointmentRepository;
+    private final AppointmentRepository appointmentRepository;
 
 
 
-    @Override
-    public Customer SaveCustomer(Customer customer) {
-        Customer existingCustomer = customerRepository.findByEmailOrUserName(customer.getEmail(), customer.getUsername());
-        if (existingCustomer != null) {
-            throw new IllegalArgumentException("A customer with the same email or username already exists.");
+    public void signUpCustomer(CustomerDTO customerDTO) {
+
+        User existingUser = userRepository.findByEmailOrUserName(customerDTO.getEmail(), customerDTO.getUserName());
+        if (existingUser != null) {
+            throw new IllegalArgumentException("Email or username already exists");
         }
 
-        Address address = customer.getAddress();
-        address = addressRepository.save(address);
+        Customer customer = new Customer();
+        customer.setUserName(customerDTO.getUserName());
+        customer.setEmail(customerDTO.getEmail());
+        customer.setPassword(passwordEncoder.encode(customerDTO.getPassword()));
+        customer.setFirstName(customerDTO.getFirstName());
+        customer.setLastName(customerDTO.getLastName());
+        customer.setMobile(customerDTO.getMobile());
+        customer.setProfilePicture(customerDTO.getProfilePicture());
+
+        // Convert AddressDTO to Address entity
+        AddressDTO addressDTO = customerDTO.getAddress();
+        Address address = new Address();
+        address.setStreetName(addressDTO.getStreetName());
+        address.setCity(addressDTO.getCity());
+        address.setProvince(addressDTO.getProvince());
+        address.setZipCode(address.getZipCode());
         customer.setAddress(address);
 
-        customer.setPassword(passwordEncoder.encode(customer.getPassword()));
+        customer.setEnabled(true); // Enable the user by default
 
-        Role role = roleRepository.findByName(ERole.ROLE_CUSTOMER)
-                .orElseThrow(() -> new IllegalArgumentException("Role not found."));
-        customer.setRoles((Role)role);
+        // Check if the customer role exists, if not, create it
+        Optional<Role> optionalRole = roleRepository.findByName(ERole.ROLE_CUSTOMER);
+        Role customerRole = optionalRole.orElseGet(() -> {
+            Role newRole = new Role();
+            newRole.setName(ERole.ROLE_CUSTOMER);
+            return roleRepository.save(newRole);
+        });
 
-        return customerRepository.save(customer);
+        customer.setRoles(customerRole);
+
+        customerRepository.save(customer);
     }
+
 
 
 
@@ -77,7 +94,7 @@ public class CustomerServiceImpl implements CustomerService {
 
         return customerOptional.map(customer -> {
             CustomerDTO customerDTO = modelMapper.map(customer, CustomerDTO.class);
-            customerDTO.setRole(modelMapper.map(customer.getRoles(), RoleDTO.class));
+
             return customerDTO;
         });
     }

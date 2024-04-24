@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class BrowseServiceProviderDTO {
     private byte[] pictures;
-    private int rating;
+    private double rating;
     private String firstName;
     private AddressDTO address;
     private String lastName;

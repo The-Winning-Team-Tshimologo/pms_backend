@@ -19,7 +19,7 @@ public class Review {
     private String feedback;
 
     @Column(name = "rating")
-    private int rating;
+    private double rating;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id")

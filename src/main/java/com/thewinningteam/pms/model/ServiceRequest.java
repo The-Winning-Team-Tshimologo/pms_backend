@@ -29,6 +29,8 @@ public class ServiceRequest {
     @Column(name = "description", length = 4000)
     private String description;
 
+    private boolean completed;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 255)
     private ServiceStatus status = ServiceStatus.PENDING;

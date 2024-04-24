@@ -127,4 +127,20 @@ public class ServiceController {
         requestService.withdrawApplication(serviceRequestId);
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/confirm-completed/{serviceRequestId}")
+    public ResponseEntity<String> confirmCompletedProject(@PathVariable Long serviceRequestId, Authentication authentication) {
+        try {
+            // Call the service method to confirm the completion of the project
+            requestService.confirmCompletedProject(serviceRequestId, authentication);
+
+            return ResponseEntity.ok("Project completion confirmed successfully");
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Bad request: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to confirm project completion: " + e.getMessage());
+        }
+    }
 }
