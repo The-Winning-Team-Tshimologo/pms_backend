@@ -4,16 +4,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thewinningteam.pms.DTO.CustomerDTO;
 import com.thewinningteam.pms.DTO.LoginDTO;
+import com.thewinningteam.pms.DTO.UserDetailsDTO;
 import com.thewinningteam.pms.Repository.TokenRepository;
 import com.thewinningteam.pms.Service.CustomerService;
 import com.thewinningteam.pms.auth.AuthenticationService;
 import com.thewinningteam.pms.emailservice.EmailService;
 import com.thewinningteam.pms.Service.ServiceProviderService;
 import com.thewinningteam.pms.emailservice.EmailTemplateName;
-import com.thewinningteam.pms.model.Customer;
-import com.thewinningteam.pms.model.Profile;
-import com.thewinningteam.pms.model.ServiceProvider;
-import com.thewinningteam.pms.model.Token;
+import com.thewinningteam.pms.model.*;
 import com.thewinningteam.pms.request.AuthenticationRequest;
 import com.thewinningteam.pms.response.AuthenticationResponse;
 import jakarta.mail.MessagingException;
@@ -38,7 +36,6 @@ import java.util.Optional;
 import java.util.Random;
 
 @RestController
-@CrossOrigin("*")
 
 @RequiredArgsConstructor
 @RequestMapping("user")
@@ -194,4 +191,19 @@ public class UserController {
     public ResponseEntity<String> getCustomerByIdsdgdsg() {
         return ResponseEntity.ok("dsgdsg");
     }
+
+
+    @GetMapping("/user-details")
+    public UserDetailsDTO getUserDetails() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof User) {
+            User user = (User) authentication.getPrincipal();
+            UserDetailsDTO userDetailsDTO = new UserDetailsDTO();
+            userDetailsDTO.setFullName(user.fullName());
+            userDetailsDTO.setProfilePicture(user.getProfilePicture());
+            return userDetailsDTO;
+        }
+        return null; // Or handle the case where user details are not available
+    }
+
 }

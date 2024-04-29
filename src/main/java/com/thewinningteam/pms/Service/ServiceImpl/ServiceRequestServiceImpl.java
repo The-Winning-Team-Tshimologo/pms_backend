@@ -36,8 +36,6 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
     private final ServiceProviderRepository serviceProviderRepository;
     private final CategoryService categoryService;
     private final CustomerRepository customerRepository;
-    private final ServiceMapper serviceMapper;
-    private final ModelMapper modelMapper;
 
     @Override
     public void createServiceRequest(
