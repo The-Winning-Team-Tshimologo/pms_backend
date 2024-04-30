@@ -4,6 +4,7 @@ package com.thewinningteam.pms.exception;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -47,6 +48,18 @@ public class GlobalExceptionHandler {
 
     public static class TokenExpiredException extends RuntimeException {
         public TokenExpiredException(String message) {
+            super(message);
+        }
+    }
+    @ExceptionHandler(value = {ServiceProviderStatusException.class})
+    @ResponseBody
+    public ResponseEntity<ErrorResponse> handleServiceProviderStatusException(ServiceProviderStatusException ex) {
+        ErrorResponse errorResponse = new ErrorResponse(ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    public static class ServiceProviderStatusException extends RuntimeException {
+        public ServiceProviderStatusException(String message) {
             super(message);
         }
     }

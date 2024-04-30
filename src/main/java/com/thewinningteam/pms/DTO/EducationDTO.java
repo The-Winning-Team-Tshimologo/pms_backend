@@ -16,5 +16,5 @@ public class EducationDTO {
     private String qualification;
     private Date startDate;
     private Date enddate;
-    private Profile profile;
+//    private Profile profile;
 }

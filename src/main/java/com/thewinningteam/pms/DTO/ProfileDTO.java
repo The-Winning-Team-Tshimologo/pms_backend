@@ -4,9 +4,13 @@ import com.thewinningteam.pms.model.Education;
 import com.thewinningteam.pms.model.WorkExperience;
 import jakarta.persistence.Column;
 import jakarta.persistence.OneToMany;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
+@RequiredArgsConstructor
+@Data
 public class ProfileDTO {
     private Long profileId;
     private String skills;

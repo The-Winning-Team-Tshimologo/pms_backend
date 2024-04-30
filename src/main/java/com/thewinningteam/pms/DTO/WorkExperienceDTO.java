@@ -16,5 +16,5 @@ public class WorkExperienceDTO {
     private String title;
     private String companyName;
     private String description;
-    private Profile profile;
+//    private Profile profile;
 }

@@ -1,15 +1,13 @@
 package com.thewinningteam.pms.auth;
 
 import com.thewinningteam.pms.Controller.UserController;
+import com.thewinningteam.pms.Repository.ServiceProviderRepository;
 import com.thewinningteam.pms.Repository.TokenRepository;
 import com.thewinningteam.pms.Repository.UserRepository;
 import com.thewinningteam.pms.emailservice.EmailService;
 import com.thewinningteam.pms.emailservice.EmailTemplateName;
 import com.thewinningteam.pms.exception.GlobalExceptionHandler;
-import com.thewinningteam.pms.model.Customer;
-import com.thewinningteam.pms.model.Role;
-import com.thewinningteam.pms.model.Token;
-import com.thewinningteam.pms.model.User;
+import com.thewinningteam.pms.model.*;
 import com.thewinningteam.pms.request.AuthenticationRequest;
 import com.thewinningteam.pms.response.AuthenticationResponse;
 import com.thewinningteam.pms.security.JwtService;
@@ -39,6 +37,7 @@ public class AuthenticationService {
     private final TokenRepository tokenRepository;
     private final EmailService emailService;
     private final UserRepository userRepository;
+    private final ServiceProviderRepository serviceProviderRepository;
     @Value("${application.mailing.frontend.activation-url}")
     private String activationUrl;
 
@@ -53,6 +52,32 @@ public class AuthenticationService {
         var claims = new HashMap<String, Object>();
         var user = ((User)auth.getPrincipal());
         claims.put("fullName", user.fullName());
+
+        if (user.getRoles().getName() == ERole.ROLE_SERVICE_PROVIDER) {
+            ServiceProvider serviceProvider = serviceProviderRepository.findByEmailOrUserName(user.getEmail(),user.getEmail());
+            if (serviceProvider != null) {
+                AcceptanceStatus acceptanceStatus = serviceProvider.getAcceptanceStatus();
+                switch (acceptanceStatus) {
+                    case ACCEPTED:
+                        // Generate JWT token
+                        var jwtToken = jwtService.generateToken(claims, user);
+                        return AuthenticationResponse.builder()
+                                .token(jwtToken)
+                                .id(user.getUserId())
+                                .email(user.getEmail())
+                                .roles(user.getRoles().getName().toString())
+                                .build();
+                    case PENDING:
+                        throw new GlobalExceptionHandler.ServiceProviderStatusException("Your service provider account is pending approval.");
+                    case REJECTED:
+                        throw new GlobalExceptionHandler.ServiceProviderStatusException("Your service provider account has been rejected.");
+                    default:
+                        return null;
+                }
+            }
+        }
+
+
         var jwtToken = jwtService.generateToken(claims, user);
 
         return AuthenticationResponse.builder()

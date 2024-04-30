@@ -1,6 +1,7 @@
 package com.thewinningteam.pms.Controller;
 
 
+import com.thewinningteam.pms.DTO.ServiceProviderDTO;
 import com.thewinningteam.pms.Service.AdminService;
 import com.thewinningteam.pms.model.AcceptanceStatus;
 import com.thewinningteam.pms.model.ServiceProvider;
@@ -16,7 +17,7 @@ import java.util.List;
 @RequestMapping("admin")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ROLE_ADMIN')")
-@CrossOrigin("*")
+//@CrossOrigin("*")
 public class AdminController {
 
     private final AdminService adminService;
@@ -39,15 +40,24 @@ public class AdminController {
         return ResponseEntity.ok("Admin get all Sp ");
     }
 
-    @PostMapping("/toogle-service-providers-status")
+    @PostMapping("/toogle-service-providers-status/{ServiceProviderID}")
     public ResponseEntity<String> getAllPendingServiceProviders(@PathVariable Long ServiceProviderID, @RequestParam boolean Accept ) {
+        ServiceProviderDTO serviceProviders;
+        AcceptanceStatus acceptanceStatus;
+        if (Accept){
+            acceptanceStatus = AcceptanceStatus.ACCEPTED;
+        }else {
+            acceptanceStatus = AcceptanceStatus.REJECTED;
+        }
 
-        return ResponseEntity.ok("Admin get all Sp ");
+        serviceProviders = adminService.ChangeAcceptanceStatus(ServiceProviderID, acceptanceStatus);
+        return ResponseEntity.ok(serviceProviders.getFirstName() + " has been " + acceptanceStatus.name());
     }
 
     @GetMapping("/pending-sp")
-    public ResponseEntity<List<ServiceProvider>> getAllServiceProviders() {
-        List<ServiceProvider> serviceProviders = adminService.findByAcceptanceStatus(AcceptanceStatus.PENDING);
+    public ResponseEntity<List<ServiceProviderDTO>> getAllServiceProviders() {
+        List<ServiceProviderDTO> serviceProviders = adminService.findByAcceptanceStatus(AcceptanceStatus.PENDING);
+        System.out.println("Total pending service providers: " + serviceProviders.size());
         return ResponseEntity.ok(serviceProviders);
     }
 
