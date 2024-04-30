@@ -5,8 +5,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thewinningteam.pms.DTO.CustomerDTO;
 import com.thewinningteam.pms.DTO.CustomerServiceDTO;
+import com.thewinningteam.pms.DTO.ServiceProviderDTO;
+import com.thewinningteam.pms.Service.AdminService;
 import com.thewinningteam.pms.Service.CustomerService;
 import com.thewinningteam.pms.auth.AuthenticationService;
+import com.thewinningteam.pms.model.AcceptanceStatus;
 import com.thewinningteam.pms.model.Customer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -27,7 +30,7 @@ import java.util.Optional;
 public class CustomerController {
 
     private final CustomerService customerService;
-
+    private final AdminService adminService;
 
 
     @PreAuthorize("hasRole('ROLE_CUSTOMER')")
@@ -46,5 +49,12 @@ public class CustomerController {
         return customerDTOOptional
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PreAuthorize("hasAnyRole('ROLE_CUSTOMER','ROLE_ADMIN')")
+    @GetMapping("/browse-sp")
+    public ResponseEntity<List<ServiceProviderDTO>> getAllAcceptedServiceProviders() {
+        List<ServiceProviderDTO> serviceProviders = adminService.findByAcceptanceStatus(AcceptanceStatus.ACCEPTED);
+        return ResponseEntity.ok(serviceProviders);
     }
 }

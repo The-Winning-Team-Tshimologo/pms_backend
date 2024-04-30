@@ -57,8 +57,9 @@ public class AdminController {
     @GetMapping("/pending-sp")
     public ResponseEntity<List<ServiceProviderDTO>> getAllServiceProviders() {
         List<ServiceProviderDTO> serviceProviders = adminService.findByAcceptanceStatus(AcceptanceStatus.PENDING);
-        System.out.println("Total pending service providers: " + serviceProviders.size());
         return ResponseEntity.ok(serviceProviders);
     }
+
+
 
 }

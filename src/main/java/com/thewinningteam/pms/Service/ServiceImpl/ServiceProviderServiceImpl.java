@@ -29,6 +29,7 @@ public class ServiceProviderServiceImpl implements ServiceProviderService {
     private final EducationRepository educationRepository;
     private final PasswordEncoder passwordEncoder;
     private final AddressMapper addressMapper;
+    private final CategoryRepository categoryRepository;
 
 
 
@@ -78,6 +79,18 @@ public class ServiceProviderServiceImpl implements ServiceProviderService {
 
         serviceProvider.setProfile(profile);
 
+        Category category = serviceProvider.getCategory();
+        if (category != null) {
+            String categoryName = category.getName();
+            if (categoryName != null && !categoryName.isEmpty()) {
+                try {
+                    Category foundCategory = categoryRepository.findByName(categoryName);
+                    serviceProvider.setCategory(foundCategory);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
         return serviceProviderRepository.save(serviceProvider);
     }
 
