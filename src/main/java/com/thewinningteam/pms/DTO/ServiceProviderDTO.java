@@ -1,6 +1,7 @@
 package com.thewinningteam.pms.DTO;
 
 import com.thewinningteam.pms.model.AcceptanceStatus;
+import com.thewinningteam.pms.model.Category;
 import com.thewinningteam.pms.model.Profile;
 import com.thewinningteam.pms.model.Review;
 import jakarta.persistence.*;
@@ -8,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @AllArgsConstructor
@@ -39,4 +41,7 @@ public class ServiceProviderDTO {
     private Long accountNumber;
     private String typeOfAccount;
     private Long branchCode;
+
+    private LocalDateTime createdDate;
+    private CategoryDTO category;
 }

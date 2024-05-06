@@ -49,4 +49,18 @@ public class Profile  {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private ServiceProvider serviceProvider;
+
+    @Override
+    public String toString() {
+        return "Profile{" +
+                "profileId=" + profileId +
+                ", skills='" + skills + '\'' +
+                ", expertise='" + expertise + '\'' +
+                ", professionalSummary='" + professionalSummary + '\'' +
+                ", numberOfTasksCompleted=" + numberOfTasksCompleted +
+                ", numberOfYearsWorked=" + numberOfYearsWorked +
+                ", verification=" + verification +
+                ", hourlyRate=" + hourlyRate +
+                '}';
+    }
 }

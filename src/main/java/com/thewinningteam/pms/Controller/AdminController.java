@@ -3,6 +3,7 @@ package com.thewinningteam.pms.Controller;
 
 import com.thewinningteam.pms.DTO.ServiceProviderDTO;
 import com.thewinningteam.pms.Service.AdminService;
+import com.thewinningteam.pms.Service.ServiceImpl.ServiceProviderServiceImpl;
 import com.thewinningteam.pms.model.AcceptanceStatus;
 import com.thewinningteam.pms.model.ServiceProvider;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ import java.util.List;
 public class AdminController {
 
     private final AdminService adminService;
+    private final ServiceProviderServiceImpl serviceProviderServiceImpl;
 
 //    @GetMapping("/pending-service-providers")
 //    public ResponseEntity<List<ServiceProvider>> getAllPendingServiceProviders() {
@@ -58,6 +60,11 @@ public class AdminController {
     public ResponseEntity<List<ServiceProviderDTO>> getAllServiceProviders() {
         List<ServiceProviderDTO> serviceProviders = adminService.findByAcceptanceStatus(AcceptanceStatus.PENDING);
         return ResponseEntity.ok(serviceProviders);
+    }
+
+    @GetMapping("/get-sp/{spId}")
+    public ResponseEntity<ServiceProviderDTO> getServiceProvider(@PathVariable Long spId){
+        return ResponseEntity.ok(serviceProviderServiceImpl.GetServiceProviderById(spId));
     }
 
 
