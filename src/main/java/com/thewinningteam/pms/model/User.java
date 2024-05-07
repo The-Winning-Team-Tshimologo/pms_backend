@@ -71,7 +71,7 @@ public class User implements UserDetails, Principal {
     private byte[]  profilePicture;
 
    //  Define the owning side of the relationship
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "address_id")
     private Address address;
 

@@ -2,6 +2,7 @@
 package com.thewinningteam.pms.Repository;
 
 
+import com.thewinningteam.pms.DTO.CustomerServiceRequestedDTO;
 import com.thewinningteam.pms.DTO.RequestSystemWideDTO;
 import com.thewinningteam.pms.DTO.ServiceDTO;
 import com.thewinningteam.pms.model.Category;
@@ -28,10 +29,19 @@ public interface ServiceRepository extends JpaRepository<ServiceRequest,Long> {
     @Query("SELECT NEW com.thewinningteam.pms.DTO.RequestSystemWideDTO(s.customer.profilePicture, s.address.streetName, s.address.city, SIZE(s.customer.reviews), s.customer.firstName, s.customer.lastName, s.category.name) FROM ServiceRequest s WHERE s.serviceProvider.userId IS NULL")
     List<RequestSystemWideDTO> findAllWithoutServiceProvider();
 
-
-
-
-
+    @Query("SELECT NEW com.thewinningteam.pms.DTO.CustomerServiceRequestedDTO(sp.firstName, sp.lastName, s.status, sp.profilePicture, a.appointmentDate) " +
+            "FROM ServiceRequest s " +
+            "JOIN s.serviceProvider sp " +
+            "JOIN Appointment a ON a.service = s " +
+            "WHERE s.customer.userId = :customerId")
+    List<CustomerServiceRequestedDTO> getCustomerServiceRequestedDTOByCustomerId( Long customerId);
 
 }
+
+
+
+
+
+
+
 

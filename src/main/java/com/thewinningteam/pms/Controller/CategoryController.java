@@ -16,14 +16,14 @@ import java.util.Optional;
 @RestController
 @RequestMapping("categories")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ROLE_ADMIN')")
+
 public class CategoryController {
 
     private final CategoryService categoryService;
 
 
 
-    @GetMapping
+    @GetMapping("/all")
     public ResponseEntity<List<Category>> getAllCategories() {
         List<Category> categories = categoryService.getAllCategories();
         return ResponseEntity.ok(categories);

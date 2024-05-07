@@ -1,8 +1,6 @@
 package com.thewinningteam.pms.Controller;
 
-import com.thewinningteam.pms.DTO.CreateServiceRequestDTO;
-import com.thewinningteam.pms.DTO.RequestSystemWideDTO;
-import com.thewinningteam.pms.DTO.ServiceDTO;
+import com.thewinningteam.pms.DTO.*;
 import com.thewinningteam.pms.Service.ServiceImpl.ServiceRequestServiceImpl;
 import com.thewinningteam.pms.exception.AuthenticationException;
 import com.thewinningteam.pms.exception.ServiceProviderNotFoundException;
@@ -59,9 +57,15 @@ public class ServiceController {
         }
     }
 
+    @GetMapping("/customer")
+    public ResponseEntity<List<CustomerServiceRequestedDTO>> getAllServiceRequestsForConnectedCustomer(Authentication authentication) {
+        List<CustomerServiceRequestedDTO> serviceRequests = requestService.getAllServiceRequestsForConnectedCustomer(authentication);
+        return ResponseEntity.ok(serviceRequests);
+    }
+
     @PostMapping("/create/{categoryId}")
     public ResponseEntity<?> createServiceRequest(
-            @RequestBody CreateServiceRequestDTO createServiceRequestDTO,
+            @RequestBody CreateServiceAndAppointmentDTO requestDTO,
             Authentication authentication,
             @PathVariable Long categoryId) {
 
@@ -71,11 +75,13 @@ public class ServiceController {
         }
 
         try {
-            requestService.createServiceRequestSystemWide( new ServiceRequest(),
+            requestService.createServiceRequestSystemWide(new ServiceRequest(),
                     authentication,
                     categoryId,
-                    createServiceRequestDTO.getDescription(),
-                    createServiceRequestDTO.getAddress());
+                    requestDTO.getCreateServiceRequestDTO().getDescription(),
+                    requestDTO.getCreateServiceRequestDTO().getAddress(),
+                    requestDTO.getCreateAppointmentDTO().getAppointmentDate(),
+                    requestDTO.getCreateAppointmentDTO().getAppointmentMessage());
 
             return ResponseEntity.ok("Service request created successfully");
         } catch (EntityNotFoundException e) {
@@ -84,7 +90,6 @@ public class ServiceController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while processing the request");
         }
     }
-
     @GetMapping("/system-wide")
     public ResponseEntity<List<RequestSystemWideDTO>> getAllServiceRequestsSystemWide(Authentication authentication) {
         try {
@@ -95,7 +100,7 @@ public class ServiceController {
         }
     }
 
-    @PreAuthorize("hasRole('ROLE_SERVICE_PROVIDER')")
+
     @GetMapping("/serviceRequests")
     public ResponseEntity<List<ServiceDTO>> getServiceRequestsWithCustomerByConnectedServiceProvider() {
         try {
