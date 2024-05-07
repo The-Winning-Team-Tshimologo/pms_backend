@@ -31,7 +31,7 @@ public class AdminServiceImpl implements AdminService {
 //        System.out.println(serviceProviderRepository.findByAcceptanceStatus(status));
 //        System.out.println("Acceptance Status " +status);
         List<ServiceProvider> serviceProviders = serviceProviderRepository.findByAcceptanceStatus(status);
-        System.out.println(serviceProviders.size());
+//        System.out.println(serviceProviders.size());
         return serviceProviders.stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
