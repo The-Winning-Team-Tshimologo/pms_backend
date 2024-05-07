@@ -83,7 +83,7 @@ public class AuthenticationController {
                                                           @RequestParam(value = "profilePicture", required = false) MultipartFile profilePicture,
                                                           @RequestParam(value = "identityDocument", required = false) MultipartFile identityDocument,
                                                           @RequestParam(value = "bankStatement", required = false) MultipartFile bankStatement,
-                                                          @RequestParam(value = "CriminalRecord", required = false) MultipartFile CriminalRecord,
+                                                          @RequestParam(value = "criminalRecord", required = false) MultipartFile CriminalRecord,
                                                           @RequestParam(value = "resume", required = false) MultipartFile resume,
                                                           @RequestParam("profile") String profile) {
 

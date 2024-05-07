@@ -27,6 +27,18 @@ public class WorkExperience {
     @JoinColumn(name = "profile_id")
     private Profile profile;
 
+    @Override
+    public String toString() {
+        return "WorkExperience{" +
+                "workId=" + workId +
+                ", startDate=" + startDate +
+                ", endDate=" + endDate +
+                ", title='" + title + '\'' +
+                ", companyName='" + companyName + '\'' +
+                ", description='" + description + '\'' +
+                '}';
+    }
+
 
 }
 

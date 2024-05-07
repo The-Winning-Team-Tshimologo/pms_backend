@@ -46,7 +46,7 @@ public class AdminServiceImpl implements AdminService {
         return convertToDto(serviceProviderRepository.save(serviceProvider));
     }
 
-    private ServiceProviderDTO convertToDto(ServiceProvider serviceProvider) {
+    public ServiceProviderDTO convertToDto(ServiceProvider serviceProvider) {
         ServiceProviderDTO serviceProviderDTO = modelMapper.map(serviceProvider, ServiceProviderDTO.class);
         serviceProviderDTO.setRole(modelMapper.map(serviceProvider.getRoles(), RoleDTO.class));
 

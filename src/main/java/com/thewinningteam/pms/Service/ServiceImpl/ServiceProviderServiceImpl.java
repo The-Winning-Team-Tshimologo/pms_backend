@@ -10,6 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.Hibernate;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +31,8 @@ public class ServiceProviderServiceImpl implements ServiceProviderService {
     private final PasswordEncoder passwordEncoder;
     private final AddressMapper addressMapper;
     private final CategoryRepository categoryRepository;
+    private final AdminServiceImpl adminService;
+
 
 
 
@@ -53,8 +56,6 @@ public class ServiceProviderServiceImpl implements ServiceProviderService {
         Role role = roleRepository.findByName(ERole.ROLE_SERVICE_PROVIDER).orElseThrow(() -> new IllegalArgumentException("Role not found."));
 
         serviceProvider.setRoles((Role) role);
-
-        System.out.println(serviceProvider.getProfile());
 
         Profile profile = serviceProvider.getProfile();
         profile = profileRepository.save(profile);
@@ -81,23 +82,19 @@ public class ServiceProviderServiceImpl implements ServiceProviderService {
         serviceProvider.setProfile(profile);
 
         Category category = serviceProvider.getCategory();
-        if (category != null) {
-            String categoryName = category.getName();
-            if (categoryName != null && !categoryName.isEmpty()) {
-                try {
-                    Category foundCategory = categoryRepository.findByName(categoryName);
-                    serviceProvider.setCategory(foundCategory);
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
+        if (category != null && category.getCategoryId() == null) {
+            category = categoryRepository.save(category);
+            serviceProvider.setCategory(category);
         }
+
         return serviceProviderRepository.save(serviceProvider);
     }
 
     @Override
-    public Optional<ServiceProviderDTO> GetServiceProviderById(Long userID) {
-        return Optional.empty();
+    public ServiceProviderDTO GetServiceProviderById(Long userID) {
+        ServiceProvider serviceProvider = serviceProviderRepository.findById(userID)
+                .orElseThrow(() -> new UsernameNotFoundException("Service Provider not found with ID: " +userID));;
+        return adminService.convertToDto(serviceProvider);
     }
 
     @Override
