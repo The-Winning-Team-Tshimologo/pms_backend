@@ -1,6 +1,7 @@
 package com.thewinningteam.pms.exception;
 
 
+import io.jsonwebtoken.ExpiredJwtException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.springframework.http.HttpStatus;
@@ -31,6 +32,10 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ResponseBody
     public ErrorResponse handleUsernameNotFoundException(UsernameNotFoundException ex) {
+        return new ErrorResponse(ex.getMessage());
+    }
+    @ExceptionHandler(ExpiredJwtException.class)
+    public ErrorResponse handleExpiredJwtException(ExpiredJwtException ex) {
         return new ErrorResponse(ex.getMessage());
     }
 

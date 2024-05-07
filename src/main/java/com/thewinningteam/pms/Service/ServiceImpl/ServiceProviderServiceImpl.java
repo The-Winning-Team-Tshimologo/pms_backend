@@ -34,7 +34,8 @@ public class ServiceProviderServiceImpl implements ServiceProviderService {
 
 
     @Override
-    public ServiceProvider SaveServiceProvider(ServiceProvider serviceProvider) {
+    public ServiceProvider SaveServiceProvider(ServiceProvider serviceProvider)
+    {
         ServiceProvider existingServiceProvider = serviceProviderRepository.findByEmailOrUserName(serviceProvider.getEmail(), serviceProvider.getUsername());
         if (existingServiceProvider != null) {
             throw new IllegalArgumentException("A service provider with the same email or username already exists.");

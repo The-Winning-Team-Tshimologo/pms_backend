@@ -1,9 +1,9 @@
 package com.thewinningteam.pms.Service.ServiceImpl;
 
-import com.thewinningteam.pms.DTO.BrowseServiceProviderDTO;
-
+import com.thewinningteam.pms.DTO.CustomerServiceRequestedDTO;
 import com.thewinningteam.pms.DTO.RequestSystemWideDTO;
 import com.thewinningteam.pms.DTO.ServiceDTO;
+import com.thewinningteam.pms.Repository.AppointmentRepository;
 import com.thewinningteam.pms.Repository.CustomerRepository;
 import com.thewinningteam.pms.Repository.ServiceProviderRepository;
 import com.thewinningteam.pms.Repository.ServiceRepository;
@@ -11,10 +11,8 @@ import com.thewinningteam.pms.Service.CategoryService;
 import com.thewinningteam.pms.Service.ServiceRequestService;
 import com.thewinningteam.pms.exception.ServiceProviderNotFoundException;
 import com.thewinningteam.pms.model.*;
-import com.thewinningteam.pms.mapper.ServiceMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -22,6 +20,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+
+import java.sql.Date;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -36,6 +37,7 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
     private final ServiceProviderRepository serviceProviderRepository;
     private final CategoryService categoryService;
     private final CustomerRepository customerRepository;
+    private final AppointmentRepository appointmentRepository;
 
     @Override
     public void createServiceRequest(
@@ -96,9 +98,10 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
             Authentication connectedUser,
             Long categoryId,
             String description,
-            Address address)
+            Address address,
+            Timestamp appointmentDate,
+            String appointmentMessage) {
 
-    {
         // Retrieve the logged-in customer from the Authentication object
         Customer customer = (Customer) connectedUser.getPrincipal();
 
@@ -112,23 +115,35 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
         // Set the address to the service request
         request.setAddress(address);
 
-            // Retrieve the category by ID
-            Optional<Category> optionalCategory = categoryService.getCategoryById(categoryId);
+        // Retrieve the category by ID
+        Optional<Category> optionalCategory = categoryService.getCategoryById(categoryId);
 
-            // Check if the category exists
-            if (optionalCategory.isPresent()) {
-                Category category = optionalCategory.get();
-                // Set the retrieved category to the request
-                request.setCategory(category);
-            } else {
-                // If the category with the given ID does not exist, throw an exception or handle the case accordingly
-                throw new EntityNotFoundException("Category with ID " + categoryId + " not found.");
-            }
+        // Check if the category exists
+        if (optionalCategory.isPresent()) {
+            Category category = optionalCategory.get();
+            // Set the retrieved category to the request
+            request.setCategory(category);
+        } else {
+            // If the category with the given ID does not exist, throw an exception or handle the case accordingly
+            throw new EntityNotFoundException("Category with ID " + categoryId + " not found.");
+        }
 
-            // Save the service request
-            serviceRepository.save(request);
+        // Save the service request
+        serviceRepository.save(request);
 
+        // Create the appointment
+        Appointment appointment = new Appointment();
+        appointment.setRequestDate(new Timestamp(System.currentTimeMillis()));
+        appointment.setAppointmentDate(new Date(appointmentDate.getTime())); // Assuming appointmentDate is of type java.util.Date
+        appointment.setMessage(appointmentMessage);
+        appointment.setCustomer(customer);
+        appointment.setService(request);
+
+
+        // Save the appointment
+        appointmentRepository.save(appointment);
     }
+
 
 
 
@@ -139,11 +154,15 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
             throw new RuntimeException("User not authenticated");
         }
 
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        if (!userDetails.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SERVICE_PROVIDER"))) {
+            throw new AccessDeniedException("User is not a service provider");
+        }
+
         ServiceProvider serviceProvider = (ServiceProvider) authentication.getPrincipal();
         Long serviceProviderId = serviceProvider.getUserId();
 
         // Call the repository method to get ServiceDTO objects directly
-
         return serviceRepository.findServiceRequestsWithCustomerByServiceProviderId(serviceProviderId);
     }
 
@@ -172,7 +191,6 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
             throw new RuntimeException("User not authenticated");
         }
 
-        // Check if the user is a service provider
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         if (!userDetails.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SERVICE_PROVIDER"))) {
             throw new AccessDeniedException("User is not a service provider");
@@ -342,14 +360,14 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
         }
     }
 
+    @Override
+    public List<CustomerServiceRequestedDTO> getAllServiceRequestsForConnectedCustomer(Authentication connectedUser) {
+        // Retrieve the logged-in customer from the Authentication object
+        Customer customer = (Customer) connectedUser.getPrincipal();
 
-
-
-
-
-
-
-
+        // Query the database for service requests associated with the customer
+        return serviceRepository.getCustomerServiceRequestedDTOByCustomerId(customer.getUserId());
+    }
 
 
     @Override
