@@ -11,7 +11,15 @@ import java.sql.Timestamp;
 import java.util.List;
 
 public interface ServiceRequestService {
-  void createServiceRequest(ServiceRequest request, Authentication connectedUser, Long serviceProviderId, Long categoryId, String description, Address address);
+  void createServiceRequest(
+          ServiceRequest request,
+          Authentication connectedUser,
+          Long serviceProviderId,
+          Long categoryId,
+          String description,
+          Address address,
+          Timestamp appointmentDate,
+          String appointmentMessage);
   List<ServiceDTO> findServiceRequestsWithCustomerByConnectedServiceProvider();
   // New methods to accept or decline service requests
   void acceptServiceRequest(Long serviceRequestId);
@@ -33,6 +41,8 @@ public interface ServiceRequestService {
   List<RequestSystemWideDTO> findAllServiceRequestedSystemWide(Authentication authentication);
 
   void confirmCompletedProject(Long serviceRequestId, Authentication authentication);
+
+  long getTotalServiceRequests();
     // Add more methods as needed
 }
 

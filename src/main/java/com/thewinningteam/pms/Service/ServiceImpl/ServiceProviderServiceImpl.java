@@ -123,6 +123,7 @@ public class ServiceProviderServiceImpl implements ServiceProviderService {
 
     public BrowseServiceProviderDTO mapToBrowseServiceProviderDTO(ServiceProvider serviceProvider) {
         BrowseServiceProviderDTO dto = new BrowseServiceProviderDTO();
+        dto.setUserId(serviceProvider.getUserId());
         dto.setFirstName(serviceProvider.getFirstName());
         dto.setLastName(serviceProvider.getLastName());
         dto.setAddress(addressMapper.toDTO(serviceProvider.getAddress()));

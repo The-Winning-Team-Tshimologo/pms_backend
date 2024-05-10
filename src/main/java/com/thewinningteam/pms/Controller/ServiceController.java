@@ -30,7 +30,7 @@ public class ServiceController {
     @PreAuthorize("hasRole('ROLE_CUSTOMER')")
     @PostMapping("/create/{serviceProviderId}/{categoryId}")
     public ResponseEntity<String> createServiceRequest(
-            @RequestBody CreateServiceRequestDTO createServiceRequestDTO,
+            @RequestBody CreateServiceAndAppointmentDTO requestDTO,
             Authentication authentication,
             @PathVariable Long serviceProviderId,
             @PathVariable Long categoryId
@@ -43,8 +43,10 @@ public class ServiceController {
                     authentication,
                     serviceProviderId,
                     categoryId,
-                    createServiceRequestDTO.getDescription(),
-                    createServiceRequestDTO.getAddress()
+                    requestDTO.getCreateServiceRequestDTO().getDescription(),
+                    requestDTO.getCreateServiceRequestDTO().getAddress(),
+                    requestDTO.getCreateAppointmentDTO().getAppointmentDate(),
+                    requestDTO.getCreateAppointmentDTO().getAppointmentMessage()
             );
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body("Service request created successfully.");
@@ -147,5 +149,17 @@ public class ServiceController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to confirm project completion: " + e.getMessage());
         }
+    }
+
+    @GetMapping("/count")
+    public ResponseEntity<Long> countAllServices(){
+        try{
+            Long totalServices = requestService.getTotalServiceRequests();
+          return new ResponseEntity<>(totalServices, HttpStatus.OK);
+        }catch (Exception e)
+        {
+            return (ResponseEntity<Long>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
     }
 }

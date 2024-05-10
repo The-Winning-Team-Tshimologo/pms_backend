@@ -36,6 +36,10 @@ public interface ServiceRepository extends JpaRepository<ServiceRequest,Long> {
             "WHERE s.customer.userId = :customerId")
     List<CustomerServiceRequestedDTO> getCustomerServiceRequestedDTOByCustomerId( Long customerId);
 
+    @Query("SELECT COUNT(sr) FROM ServiceRequest sr")
+    long countAllServiceRequests();
+
+
 }
 
 

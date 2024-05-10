@@ -46,7 +46,9 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
             Long serviceProviderId,
             Long categoryId,
             String description,
-            Address address)
+            Address address,
+            Timestamp appointmentDate,
+            String appointmentMessage)
     {
         // Retrieve the logged-in customer from the Authentication object
         Customer customer = (Customer) connectedUser.getPrincipal();
@@ -90,6 +92,18 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
             // If the service provider with the given ID does not exist, throw an exception or handle the case accordingly
             throw new ServiceProviderNotFoundException("Service provider with ID " + serviceProviderId + " not found.");
         }
+
+        Appointment appointment = new Appointment();
+        appointment.setRequestDate(new Timestamp(System.currentTimeMillis()));
+        appointment.setAppointmentDate(new Date(appointmentDate.getTime())); // Assuming appointmentDate is of type java.util.Date
+        appointment.setMessage(appointmentMessage);
+        appointment.setCustomer(customer);
+        appointment.setService(request);
+
+
+        // Save the appointment
+        appointmentRepository.save(appointment);
+
     }
 
     @Override
@@ -230,6 +244,22 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
         serviceRequest.setCompleted(true);
         serviceRepository.save(serviceRequest);
     }
+
+    @Override
+    public long getTotalServiceRequests() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication == null || !authentication.isAuthenticated()){
+            throw new AccessDeniedException("User is not authenticated");
+        }
+
+        UserDetails userDetails = (UserDetails)authentication.getPrincipal();
+        if(!userDetails.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))){
+            throw new AccessDeniedException("User is not a Admin");
+        }
+
+        return  serviceRepository.countAllServiceRequests();
+    }
+
     @Override
     public void acceptServiceRequest(Long serviceRequestId) {
         // Get the authentication object from the security context
