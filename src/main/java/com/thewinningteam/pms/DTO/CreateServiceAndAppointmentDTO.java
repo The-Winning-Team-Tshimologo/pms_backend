@@ -11,5 +11,6 @@ public class CreateServiceAndAppointmentDTO {
     private CreateServiceRequestDTO createServiceRequestDTO;
     private CreateAppointmentDTO createAppointmentDTO;
 
+
     // Getters and setters
 }

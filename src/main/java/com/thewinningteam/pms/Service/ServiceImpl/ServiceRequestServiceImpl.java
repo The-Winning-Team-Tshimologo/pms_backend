@@ -4,29 +4,37 @@ import com.thewinningteam.pms.DTO.CustomerServiceRequestedDTO;
 import com.thewinningteam.pms.DTO.RequestSystemWideDTO;
 import com.thewinningteam.pms.DTO.ServiceDTO;
 import com.thewinningteam.pms.Repository.AppointmentRepository;
-import com.thewinningteam.pms.Repository.CustomerRepository;
 import com.thewinningteam.pms.Repository.ServiceProviderRepository;
 import com.thewinningteam.pms.Repository.ServiceRepository;
 import com.thewinningteam.pms.Service.CategoryService;
 import com.thewinningteam.pms.Service.ServiceRequestService;
 import com.thewinningteam.pms.exception.ServiceProviderNotFoundException;
+import com.thewinningteam.pms.mapper.ServiceMapper;
 import com.thewinningteam.pms.model.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 
+import java.io.IOException;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+
 import java.util.stream.Collectors;
+
+
 
 @Service
 @RequiredArgsConstructor
@@ -36,9 +44,12 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
     private final ServiceRepository serviceRepository;
     private final ServiceProviderRepository serviceProviderRepository;
     private final CategoryService categoryService;
-    private final CustomerRepository customerRepository;
     private final AppointmentRepository appointmentRepository;
 
+    private static final Logger logger = LoggerFactory.getLogger(ServiceRequestServiceImpl.class);
+
+
+    // Method to create a service request with a connected service provider
     @Override
     public void createServiceRequest(
             ServiceRequest request,
@@ -48,64 +59,27 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
             String description,
             Address address,
             Timestamp appointmentDate,
-            String appointmentMessage)
-    {
-        // Retrieve the logged-in customer from the Authentication object
-        Customer customer = (Customer) connectedUser.getPrincipal();
+            String appointmentMessage
 
-        // Set the logged-in customer to the service request
+    ) {
+        Customer customer = getLoggedInCustomer(connectedUser);
+
         request.setCustomer(customer);
         request.setDescription(description);
-
-        // Set the service status to PENDING (or any default status)
         request.setStatus(ServiceStatus.PENDING);
-
-        // Set the address to the service request
         request.setAddress(address);
 
-        // Retrieve the service provider by ID
-        Optional<ServiceProvider> optionalServiceProvider =
-                serviceProviderRepository.findById(serviceProviderId);
+        ServiceProvider serviceProvider = getServiceProvider(serviceProviderId);
+        Category category = getCategory(categoryId);
+        request.setServiceProvider(serviceProvider);
+        request.setCategory(category);
 
-        // Check if the service provider exists
-        if (optionalServiceProvider.isPresent()) {
-            ServiceProvider serviceProvider = optionalServiceProvider.get();
-            // Set the retrieved service provider to the request
-            request.setServiceProvider(serviceProvider);
+        serviceRepository.save(request);
 
-            // Retrieve the category by ID
-            Optional<Category> optionalCategory = categoryService.getCategoryById(categoryId);
-
-            // Check if the category exists
-            if (optionalCategory.isPresent()) {
-                Category category = optionalCategory.get();
-                // Set the retrieved category to the request
-                request.setCategory(category);
-            } else {
-                // If the category with the given ID does not exist, throw an exception or handle the case accordingly
-                throw new EntityNotFoundException("Category with ID " + categoryId + " not found.");
-            }
-
-            // Save the service request
-            serviceRepository.save(request);
-        } else {
-            // If the service provider with the given ID does not exist, throw an exception or handle the case accordingly
-            throw new ServiceProviderNotFoundException("Service provider with ID " + serviceProviderId + " not found.");
-        }
-
-        Appointment appointment = new Appointment();
-        appointment.setRequestDate(new Timestamp(System.currentTimeMillis()));
-        appointment.setAppointmentDate(new Date(appointmentDate.getTime())); // Assuming appointmentDate is of type java.util.Date
-        appointment.setMessage(appointmentMessage);
-        appointment.setCustomer(customer);
-        appointment.setService(request);
-
-
-        // Save the appointment
-        appointmentRepository.save(appointment);
-
+        saveAppointment(customer, request, appointmentDate, appointmentMessage);
     }
 
+    // Method to create a service request system-wide (without a connected service provider)
     @Override
     public void createServiceRequestSystemWide(
             ServiceRequest request,
@@ -114,281 +88,202 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
             String description,
             Address address,
             Timestamp appointmentDate,
-            String appointmentMessage) {
+            String appointmentMessage
 
-        // Retrieve the logged-in customer from the Authentication object
-        Customer customer = (Customer) connectedUser.getPrincipal();
+    ) {
+        Customer customer = getLoggedInCustomer(connectedUser);
 
-        // Set the logged-in customer to the service request
         request.setCustomer(customer);
         request.setDescription(description);
-
-        // Set the service status to PENDING (or any default status)
         request.setStatus(ServiceStatus.PENDING);
-
-        // Set the address to the service request
         request.setAddress(address);
 
-        // Retrieve the category by ID
-        Optional<Category> optionalCategory = categoryService.getCategoryById(categoryId);
+        Category category = getCategory(categoryId);
+        request.setCategory(category);
 
-        // Check if the category exists
-        if (optionalCategory.isPresent()) {
-            Category category = optionalCategory.get();
-            // Set the retrieved category to the request
-            request.setCategory(category);
-        } else {
-            // If the category with the given ID does not exist, throw an exception or handle the case accordingly
-            throw new EntityNotFoundException("Category with ID " + categoryId + " not found.");
-        }
-
-        // Save the service request
         serviceRepository.save(request);
 
-        // Create the appointment
-        Appointment appointment = new Appointment();
-        appointment.setRequestDate(new Timestamp(System.currentTimeMillis()));
-        appointment.setAppointmentDate(new Date(appointmentDate.getTime())); // Assuming appointmentDate is of type java.util.Date
-        appointment.setMessage(appointmentMessage);
-        appointment.setCustomer(customer);
-        appointment.setService(request);
-
-
-        // Save the appointment
-        appointmentRepository.save(appointment);
+        saveAppointment(customer, request, appointmentDate, appointmentMessage);
     }
 
-
-
-
+    // Method to find service requests with customer information by connected service provider
     @Override
     public List<ServiceDTO> findServiceRequestsWithCustomerByConnectedServiceProvider() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new RuntimeException("User not authenticated");
-        }
+        Authentication authentication = getAuthentication();
+        ServiceProvider serviceProvider = getServiceProviderFromAuthentication(authentication);
 
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        if (!userDetails.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SERVICE_PROVIDER"))) {
-            throw new AccessDeniedException("User is not a service provider");
-        }
-
-        ServiceProvider serviceProvider = (ServiceProvider) authentication.getPrincipal();
-        Long serviceProviderId = serviceProvider.getUserId();
-
-        // Call the repository method to get ServiceDTO objects directly
-        return serviceRepository.findServiceRequestsWithCustomerByServiceProviderId(serviceProviderId);
-    }
-
-    // Method to convert ServiceRequest entities to ServiceDTO objects
-    private ServiceDTO toDTO(ServiceRequest serviceRequest) {
-        ServiceDTO dto = new ServiceDTO();
-        dto.setServiceId(serviceRequest.getServiceId());
-        dto.setPictures(serviceRequest.getPictures());
-        dto.setAddress(serviceRequest.getAddress());
-        dto.setDescription(serviceRequest.getDescription());
-        dto.setStatus(serviceRequest.getStatus());
-        dto.setCustomer(serviceRequest.getCustomer());
-        dto.setCategory(serviceRequest.getCategory());
-        return dto;
-    }
-
-    // Method to convert a list of ServiceRequest entities to a list of ServiceDTO objects
-    private List<ServiceDTO> toDTO(List<ServiceRequest> serviceRequests) {
-        return serviceRequests.stream()
-                .map(this::toDTO)
+        return serviceRepository.findServiceRequestsWithCustomerByServiceProviderId(serviceProvider.getUserId())
+                .stream()
+                .map(ServiceMapper::toDTO) // Using lambda expression
                 .collect(Collectors.toList());
     }
+
+
+    // Method to find all service requests system-wide
     @Override
     public List<RequestSystemWideDTO> findAllServiceRequestedSystemWide(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new RuntimeException("User not authenticated");
-        }
-
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        if (!userDetails.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SERVICE_PROVIDER"))) {
-            throw new AccessDeniedException("User is not a service provider");
-        }
+        ServiceProvider serviceProvider = getServiceProviderFromAuthentication(authentication);
 
         return serviceRepository.findAllWithoutServiceProvider();
     }
 
-    @Override
-    public void confirmCompletedProject(Long serviceRequestId, Authentication authentication) {
+
+    // Helper method to retrieve the logged-in customer from authentication
+    private Customer getLoggedInCustomer(Authentication connectedUser) {
+        return (Customer) connectedUser.getPrincipal();
+    }
+
+    // Helper method to retrieve a service provider by ID
+    private ServiceProvider getServiceProvider(Long serviceProviderId) {
+        return serviceProviderRepository.findById(serviceProviderId)
+                .orElseThrow(() -> new ServiceProviderNotFoundException("Service provider with ID " + serviceProviderId + " not found."));
+    }
+
+    // Helper method to retrieve a category by ID
+    private Category getCategory(Long categoryId) {
+        return categoryService.getCategoryById(categoryId)
+                .orElseThrow(() -> new EntityNotFoundException("Category with ID " + categoryId + " not found."));
+    }
+
+    // Helper method to save an appointment associated with a service request
+    private void saveAppointment(Customer customer, ServiceRequest request, Timestamp appointmentDate, String appointmentMessage) {
+        Appointment appointment = new Appointment();
+        appointment.setRequestDate(new Timestamp(System.currentTimeMillis()));
+        appointment.setAppointmentDate(new Date(appointmentDate.getTime()));
+        appointment.setMessage(appointmentMessage);
+        appointment.setCustomer(customer);
+        appointment.setService(request);
+
+        appointmentRepository.save(appointment);
+    }
+
+
+    // Helper method to retrieve the authentication object
+    private Authentication getAuthentication() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new RuntimeException("User not authenticated");
         }
+        return authentication;
+    }
 
-        // Check if the authentication principal is a connected service provider
+    // Helper method to retrieve the service provider from authentication
+    private ServiceProvider getServiceProviderFromAuthentication(Authentication authentication) {
+        if (!isUserServiceProvider(authentication)) {
+            throw new AccessDeniedException("User is not a service provider");
+        }
+        return (ServiceProvider) authentication.getPrincipal();
+    }
+
+    // Helper method to check if the user is a service provider
+    private boolean isUserServiceProvider(Authentication authentication) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        if (!userDetails.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SERVICE_PROVIDER"))) {
-            throw new AccessDeniedException("User is not a connected service provider");
-        }
+        return userDetails.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SERVICE_PROVIDER"));
+    }
 
-        // Get the connected service provider
-        ServiceProvider serviceProvider = (ServiceProvider) userDetails;
 
-        // Retrieve the service request by its ID
-        Optional<ServiceRequest> optionalServiceRequest = serviceRepository.findById(serviceRequestId);
-        if (optionalServiceRequest.isEmpty()) {
-            throw new IllegalArgumentException("Service request not found");
-        }
-        ServiceRequest serviceRequest = optionalServiceRequest.get();
+    // Method to confirm the completion of a project
+    @Override
+    @Transactional
+    public void confirmCompletedProject(Long serviceRequestId, Authentication authentication) {
+        validateAuthentication(authentication);
 
-//        // Check if the service request belongs to the connected service provider
-//        if (!serviceRequest.getServiceProvider().equals(serviceProvider)) {
-//            throw new AccessDeniedException("Service request does not belong to the connected service provider");
-//        }
+        ServiceProvider serviceProvider = getServiceProviderFromAuthentication(authentication);
 
-        // Confirm the completion of the project
+        ServiceRequest serviceRequest = getServiceRequestById(serviceRequestId);
         serviceRequest.setCompleted(true);
         serviceRepository.save(serviceRequest);
     }
 
+    // Method to get the total number of service requests
     @Override
     public long getTotalServiceRequests() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication == null || !authentication.isAuthenticated()){
-            throw new AccessDeniedException("User is not authenticated");
-        }
+        validateAdminAuthentication();
 
-        UserDetails userDetails = (UserDetails)authentication.getPrincipal();
-        if(!userDetails.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))){
-            throw new AccessDeniedException("User is not a Admin");
-        }
-
-        return  serviceRepository.countAllServiceRequests();
+        return serviceRepository.countAllServiceRequests();
     }
 
+    // Method to accept a service request
     @Override
+    @Transactional
     public void acceptServiceRequest(Long serviceRequestId) {
-        // Get the authentication object from the security context
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Authentication authentication = getAuthentication();
+        validateAuthentication(authentication);
 
-        // Check if the authentication object is not null and the user is authenticated
-        if (authentication != null && authentication.isAuthenticated()) {
-            // Retrieve the service provider from the authentication principal
-            ServiceProvider serviceProvider = (ServiceProvider) authentication.getPrincipal();
-            Long serviceProviderId = serviceProvider.getUserId();
+        ServiceProvider serviceProvider = getServiceProviderFromAuthentication(authentication);
+        ServiceRequest serviceRequest = validateAndRetrieveServiceRequest(serviceRequestId, serviceProvider);
 
-            // Retrieve the service request by its ID
-            Optional<ServiceRequest> optionalServiceRequest = serviceRepository.findById(serviceRequestId);
-
-            // Check if the service request exists
-            if (optionalServiceRequest.isPresent()) {
-                ServiceRequest serviceRequest = optionalServiceRequest.get();
-
-                // Check if the connected service provider matches the service provider of the service request
-                if (!Objects.equals(serviceProviderId, serviceRequest.getServiceProvider().getUserId())) {
-                    throw new IllegalArgumentException("Service request does not belong to the connected service provider");
-                }
-
-                // Retrieve the customer associated with the service request
-                Customer customer = serviceRequest.getCustomer();
-
-                // Update the status of the service request to indicate acceptance
-                serviceRequest.setStatus(ServiceStatus.ACCEPTED);
-
-                // Save the updated service request
-                serviceRepository.save(serviceRequest);
-            } else {
-                // Handle the case where the service request with the given ID is not found
-                throw new IllegalArgumentException("Service request with ID " + serviceRequestId + " not found");
-            }
-        } else {
-            // Handle the case where the user is not authenticated
-            throw new RuntimeException("User not authenticated");
-        }
+        serviceRequest.setStatus(ServiceStatus.ACCEPTED);
+        serviceRepository.save(serviceRequest);
     }
 
+    // Method to decline a service request
     @Override
+    @Transactional
     public void declineServiceRequest(Long serviceRequestId) {
-        // Get the authentication object from the security context
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Authentication authentication = getAuthentication();
+        validateAuthentication(authentication);
 
-        // Check if the authentication object is not null and the user is authenticated
-        if (authentication != null && authentication.isAuthenticated()) {
-            // Retrieve the service provider from the authentication principal
-            ServiceProvider serviceProvider = (ServiceProvider) authentication.getPrincipal();
-            Long serviceProviderId = serviceProvider.getUserId();
+        ServiceProvider serviceProvider = getServiceProviderFromAuthentication(authentication);
+        ServiceRequest serviceRequest = validateAndRetrieveServiceRequest(serviceRequestId, serviceProvider);
 
-            // Retrieve the service request by its ID
-            Optional<ServiceRequest> optionalServiceRequest = serviceRepository.findById(serviceRequestId);
-
-            // Check if the service request exists
-            if (optionalServiceRequest.isPresent()) {
-                ServiceRequest serviceRequest = optionalServiceRequest.get();
-
-                // Check if the connected service provider matches the service provider of the service request
-                if (!Objects.equals(serviceProviderId, serviceRequest.getServiceProvider().getUserId())) {
-                    throw new IllegalArgumentException("Service request does not belong to the connected service provider");
-                }
-
-                // Retrieve the customer associated with the service request
-                Customer customer = serviceRequest.getCustomer();
-
-                // Update the status of the service request to indicate decline
-                serviceRequest.setStatus(ServiceStatus.REJECTED);
-
-                // Save the updated service request
-                serviceRepository.save(serviceRequest);
-            } else {
-                // Handle the case where the service request with the given ID is not found
-                throw new IllegalArgumentException("Service request with ID " + serviceRequestId + " not found");
-            }
-        } else {
-            // Handle the case where the user is not authenticated
-            throw new RuntimeException("User not authenticated");
-        }
+        serviceRequest.setStatus(ServiceStatus.REJECTED);
+        serviceRepository.save(serviceRequest);
     }
+
+    // Method to withdraw an application for a service request
     @Override
+    @Transactional
     public void withdrawApplication(Long serviceRequestId) {
-        // Get the authentication object from the security context
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Authentication authentication = getAuthentication();
+        validateAuthentication(authentication);
 
-        // Check if the authentication object is not null and the user is authenticated
-        if (authentication != null && authentication.isAuthenticated()) {
-            // Retrieve the service provider from the authentication principal
-            ServiceProvider serviceProvider = (ServiceProvider) authentication.getPrincipal();
-            Long serviceProviderId = serviceProvider.getUserId();
+        ServiceProvider serviceProvider = getServiceProviderFromAuthentication(authentication);
+        ServiceRequest serviceRequest = validateAndRetrieveServiceRequest(serviceRequestId, serviceProvider);
 
-            // Retrieve the service request by its ID
-            Optional<ServiceRequest> optionalServiceRequest = serviceRepository.findById(serviceRequestId);
+        if (serviceRequest.getStatus() != ServiceStatus.ACCEPTED) {
+            throw new IllegalStateException("Cannot withdraw application for a service request that is not accepted");
+        }
 
-            // Check if the service request exists
-            if (optionalServiceRequest.isPresent()) {
-                ServiceRequest serviceRequest = optionalServiceRequest.get();
+        serviceRequest.setServiceProvider(null);
+        serviceRequest.setStatus(ServiceStatus.REJECTED);
+        serviceRepository.save(serviceRequest);
+    }
 
-                // Check if the connected service provider matches the service provider of the service request
-                if (!Objects.equals(serviceProviderId, serviceRequest.getServiceProvider().getUserId())) {
-                    throw new IllegalArgumentException("Service request does not belong to the connected service provider");
-                }
-
-                // Check if the service request is in a state where the application can be withdrawn
-                if (serviceRequest.getStatus() != ServiceStatus.ACCEPTED) {
-                    throw new IllegalStateException("Cannot withdraw application for a service request that is not accepted");
-                }
-
-                // Set the service provider of the service request to null to withdraw the application
-                serviceRequest.setServiceProvider(null);
-
-                // Retrieve the customer associated with the service request
-                Customer customer = serviceRequest.getCustomer();
-
-                // Update the status of the service request to indicate withdrawal
-                serviceRequest.setStatus(ServiceStatus.REJECTED);
-
-                // Save the updated service request
-                serviceRepository.save(serviceRequest);
-            } else {
-                // Handle the case where the service request with the given ID is not found
-                throw new IllegalArgumentException("Service request with ID " + serviceRequestId + " not found");
-            }
-        } else {
-            // Handle the case where the user is not authenticated
+    // Helper method to validate authentication
+    private void validateAuthentication(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
             throw new RuntimeException("User not authenticated");
         }
     }
+
+    // Helper method to validate admin authentication
+    private void validateAdminAuthentication() {
+        Authentication authentication = getAuthentication();
+        validateAuthentication(authentication);
+
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        if (!userDetails.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))) {
+            throw new AccessDeniedException("User is not an admin");
+        }
+    }
+
+    // Helper method to retrieve a service request by ID
+    private ServiceRequest getServiceRequestById(Long serviceRequestId) {
+        return serviceRepository.findById(serviceRequestId)
+                .orElseThrow(() -> new IllegalArgumentException("Service request not found"));
+    }
+
+    // Helper method to validate and retrieve a service request by ID and service provider
+    private ServiceRequest validateAndRetrieveServiceRequest(Long serviceRequestId, ServiceProvider serviceProvider) {
+        ServiceRequest serviceRequest = getServiceRequestById(serviceRequestId);
+        if (!serviceRequest.getServiceProvider().equals(serviceProvider)) {
+            throw new IllegalArgumentException("Service request does not belong to the connected service provider");
+        }
+        return serviceRequest;
+    }
+
+
 
     @Override
     public List<CustomerServiceRequestedDTO> getAllServiceRequestsForConnectedCustomer(Authentication connectedUser) {
@@ -409,6 +304,44 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
     public List<ServiceRequest> getServiceRequestsByCategory(Category category) {
         return serviceRepository.findByCategory(category);
     }
+
+    // Method to assign a service provider to a customer service
+    @Transactional
+    @Override
+    public void assignServiceProviderToCustomerService(Long serviceId, Long customerId) {
+        Authentication authentication = getAuthentication();
+        ServiceProvider serviceProvider = getServiceProviderFromAuthentication(authentication);
+
+        validateUserRole(authentication);
+        checkServiceProviderAssignment(serviceId, serviceProvider);
+
+        try {
+            serviceRepository.assignServiceProviderToCustomerService(serviceId, serviceProvider.getUserId(), customerId);
+        } catch (Exception e) {
+            handleAssignmentFailure(e);
+        }
+    }
+
+    private void validateUserRole(Authentication authentication) {
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        if (!userDetails.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SERVICE_PROVIDER"))) {
+            throw new AccessDeniedException("User is not a service provider");
+        }
+    }
+
+    private void checkServiceProviderAssignment(Long serviceId, ServiceProvider serviceProvider) {
+        ServiceRequest existingAssignment = serviceRepository.findByServiceIdAndServiceProviderUserId(serviceId, serviceProvider.getUserId());
+        if (existingAssignment != null) {
+            throw new RuntimeException("Service provider is already assigned to this service");
+        }
+    }
+
+    private void handleAssignmentFailure(Exception e) {
+        logger.error("Failed to assign service provider to customer service", e);
+        throw new RuntimeException("Failed to assign service provider to customer service: " + e.getMessage());
+    }
+
+
 
 
 }

@@ -47,6 +47,7 @@ public class ServiceController {
                     requestDTO.getCreateServiceRequestDTO().getAddress(),
                     requestDTO.getCreateAppointmentDTO().getAppointmentDate(),
                     requestDTO.getCreateAppointmentDTO().getAppointmentMessage()
+
             );
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body("Service request created successfully.");
@@ -161,5 +162,17 @@ public class ServiceController {
             return (ResponseEntity<Long>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
+    }
+
+    @PutMapping("/assign/{serviceId}/{customerId}")
+    public ResponseEntity<String> assignServiceProviderToCustomerService(
+            @PathVariable Long serviceId,
+            @PathVariable Long customerId) {
+        try {
+            requestService.assignServiceProviderToCustomerService(serviceId, customerId);
+            return ResponseEntity.ok("Service provider assigned successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to assign service provider: " + e.getMessage());
+        }
     }
 }
