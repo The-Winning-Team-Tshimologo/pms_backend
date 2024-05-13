@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class BrowseServiceProviderDTO {
+    private Long userId;
     private byte[] pictures;
     private double rating;
     private String firstName;

@@ -62,7 +62,8 @@ public class AdminController {
         return ResponseEntity.ok(serviceProviders);
     }
 
-    @PreAuthorize("hasAnyRole('ROLE_CUSTOMER','ROLE_ADMIN')")
+
+    @PreAuthorize("hasAnyRole('ROLE_CUSTOMER', 'ROLE_ADMIN')")
     @GetMapping("/get-sp/{spId}")
     public ResponseEntity<ServiceProviderDTO> getServiceProvider(@PathVariable Long spId){
         return ResponseEntity.ok(serviceProviderServiceImpl.GetServiceProviderById(spId));
