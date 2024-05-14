@@ -10,6 +10,8 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 public class RequestSystemWideDTO {
+    private Long userId;
+    private Long serviceId;
     private byte[] pictures;
     private String streetName;
     private String city;
@@ -19,7 +21,9 @@ public class RequestSystemWideDTO {
     private String category;
 
     // Constructor matching the query arguments
-    public RequestSystemWideDTO(byte[] pictures, String streetName, String city, int rating, String firstName, String lastName, String category) {
+    public RequestSystemWideDTO(Long userId, Long serviceId, byte[] pictures, String streetName, String city, int rating, String firstName, String lastName, String category) {
+        this.userId = userId;
+        this.serviceId = serviceId;
         this.pictures = pictures;
         this.streetName = streetName;
         this.city = city;

@@ -9,6 +9,7 @@ import com.thewinningteam.pms.model.Category;
 
 import com.thewinningteam.pms.model.ServiceRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -26,7 +27,7 @@ public interface ServiceRepository extends JpaRepository<ServiceRequest,Long> {
             "WHERE sr.serviceProvider.userId = :serviceProviderId")
     List<ServiceDTO> findServiceRequestsWithCustomerByServiceProviderId(Long serviceProviderId);
 
-    @Query("SELECT NEW com.thewinningteam.pms.DTO.RequestSystemWideDTO(s.customer.profilePicture, s.address.streetName, s.address.city, SIZE(s.customer.reviews), s.customer.firstName, s.customer.lastName, s.category.name) FROM ServiceRequest s WHERE s.serviceProvider.userId IS NULL")
+    @Query("SELECT NEW com.thewinningteam.pms.DTO.RequestSystemWideDTO(s.customer.userId, s.serviceId, s.customer.profilePicture, s.address.streetName, s.address.city, SIZE(s.customer.reviews), s.customer.firstName, s.customer.lastName, s.category.name) FROM ServiceRequest s WHERE s.serviceProvider.userId IS NULL")
     List<RequestSystemWideDTO> findAllWithoutServiceProvider();
 
     @Query("SELECT NEW com.thewinningteam.pms.DTO.CustomerServiceRequestedDTO(sp.firstName, sp.lastName, s.status, sp.profilePicture, a.appointmentDate) " +
@@ -39,7 +40,12 @@ public interface ServiceRepository extends JpaRepository<ServiceRequest,Long> {
     @Query("SELECT COUNT(sr) FROM ServiceRequest sr")
     long countAllServiceRequests();
 
+    @Modifying
+    @Query("UPDATE ServiceRequest s SET s.serviceProvider.userId = :providerId WHERE s.serviceId = :serviceId AND s.customer.userId = :customerId")
+    void assignServiceProviderToCustomerService( Long serviceId, Long providerId, Long customerId);
 
+
+    ServiceRequest findByServiceIdAndServiceProviderUserId(Long serviceId, Long serviceProviderId);
 }
 
 

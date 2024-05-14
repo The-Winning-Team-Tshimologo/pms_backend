@@ -42,7 +42,7 @@ public class CustomerController {
 
 
 
-    @PreAuthorize("hasRole('ROLE_CUSTOMER')")
+    @PreAuthorize("hasAnyRole('ROLE_CUSTOMER', 'ROLE_SERVICE_PROVIDER')")
     @GetMapping("get-customer/{customerId}")
     public ResponseEntity<CustomerDTO> getCustomerById(@PathVariable Long customerId) {
         Optional<CustomerDTO> customerDTOOptional = customerService.GetCustomerById(customerId);

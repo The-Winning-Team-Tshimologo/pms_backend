@@ -42,4 +42,8 @@ application:
     frontend:
       activation-url: http://localhost:5173/activate-account
       
+  file:
+    uploads:
+      photos-output-path: ./uploads
+      
       

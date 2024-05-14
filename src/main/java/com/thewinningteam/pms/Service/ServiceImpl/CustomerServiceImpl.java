@@ -25,11 +25,10 @@ public class CustomerServiceImpl implements CustomerService {
    private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final ModelMapper modelMapper;
-    private final AddressRepository addressRepository;
     private final PasswordEncoder passwordEncoder;
     private final CustomerRepository customerRepository;
 
-    private final AppointmentRepository appointmentRepository;
+
 
 
 

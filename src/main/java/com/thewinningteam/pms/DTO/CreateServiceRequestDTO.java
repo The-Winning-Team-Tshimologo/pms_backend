@@ -7,4 +7,5 @@ import lombok.Data;
 public class CreateServiceRequestDTO {
     private String description;
     private Address address;
+    private byte[] picture;
 }

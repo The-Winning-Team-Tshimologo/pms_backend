@@ -6,7 +6,9 @@ import com.thewinningteam.pms.DTO.RequestSystemWideDTO;
 import com.thewinningteam.pms.DTO.ServiceDTO;
 import com.thewinningteam.pms.model.*;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.List;
 
@@ -43,6 +45,7 @@ public interface ServiceRequestService {
   void confirmCompletedProject(Long serviceRequestId, Authentication authentication);
 
   long getTotalServiceRequests();
+  void assignServiceProviderToCustomerService(Long serviceId, Long customerId);
     // Add more methods as needed
 }
 

@@ -1,21 +1,22 @@
 package com.thewinningteam.pms.mapper;
 
 import com.thewinningteam.pms.DTO.ServiceDTO;
-import com.thewinningteam.pms.model.ServiceRequest;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ServiceMapper {
 
-    public ServiceDTO toDTO(ServiceRequest request) {
-        // Map the fields from ServiceRequest to ServiceDTO
-        return ServiceDTO.builder()
-                .serviceId(request.getServiceId())
-                .address(request.getAddress())
-                .customer(request.getCustomer())
-                .category(request.getCategory())
-                .description(request.getDescription())
-                .build();
+    public static ServiceDTO toDTO(ServiceDTO serviceRequest) {
+        ServiceDTO dto = new ServiceDTO();
+        dto.setServiceId(serviceRequest.getServiceId());
+        dto.setPictures(serviceRequest.getPictures());
+        dto.setAddress(serviceRequest.getAddress());
+        dto.setDescription(serviceRequest.getDescription());
+        dto.setStatus(serviceRequest.getStatus());
+        dto.setCustomer(serviceRequest.getCustomer());
+        dto.setCategory(serviceRequest.getCategory());
+        return dto;
     }
 }
+
 
