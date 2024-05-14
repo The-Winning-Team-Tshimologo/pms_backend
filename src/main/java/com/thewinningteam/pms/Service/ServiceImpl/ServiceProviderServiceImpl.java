@@ -81,12 +81,22 @@ public class ServiceProviderServiceImpl implements ServiceProviderService {
 
         serviceProvider.setProfile(profile);
 
+        //Category
         Category category = serviceProvider.getCategory();
-        if (category != null && category.getCategoryId() == null) {
-            category = categoryRepository.save(category);
-            serviceProvider.setCategory(category);
-        }
+        System.out.println("foundCategory "+  category);
+        Optional<Category> optionalCategory = categoryRepository.findByName(category.getName());
 
+        if (optionalCategory.isPresent()) {
+            System.out.println("test 3");
+            category = optionalCategory.get();
+            System.out.println("foundCategory 3 "+  category);
+        } else {
+            System.out.println("test 4");
+            category = categoryRepository.save(category);
+            System.out.println("foundCategory 4 "+  category);
+        }
+        serviceProvider.setCategory(category);
+        System.out.println("test 5 ");
         return serviceProviderRepository.save(serviceProvider);
     }
 
