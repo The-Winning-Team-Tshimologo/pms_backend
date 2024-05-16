@@ -1,5 +1,7 @@
 package com.thewinningteam.pms.Controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thewinningteam.pms.DTO.*;
 import com.thewinningteam.pms.Service.ServiceImpl.ServiceRequestServiceImpl;
 import com.thewinningteam.pms.exception.AuthenticationException;
@@ -17,6 +19,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 
@@ -27,20 +30,34 @@ import java.util.List;
 public class ServiceController {
 
     private final ServiceRequestServiceImpl requestService;
+    private final ObjectMapper objectMapper;
+
 
     @PreAuthorize("hasRole('ROLE_CUSTOMER')")
     @PostMapping("/create/{serviceProviderId}/{categoryId}")
     public ResponseEntity<String> createServiceRequest(
-            @RequestBody CreateServiceAndAppointmentDTO requestDTO,
+            @RequestParam("requestDTOData") String requestDTOData,
             Authentication authentication,
             @PathVariable Long serviceProviderId,
-            @PathVariable Long categoryId
+            @PathVariable Long categoryId,
+            @RequestParam(value = "files", required = false) List<MultipartFile> files
     )
     {
+
         try {
+            CreateServiceAndAppointmentDTO requestDTO = objectMapper.readValue(requestDTOData, CreateServiceAndAppointmentDTO.class);
+            ServiceRequest serviceRequest = new ServiceRequest();
+
+            if (files != null && !files.isEmpty()) {
+                for (MultipartFile file : files) {
+                    System.out.println(file.getOriginalFilename());
+                    serviceRequest.setPictures(file.getBytes());
+                }
+            }
+
             // Call the service method to create the service request
             requestService.createServiceRequest(
-                    new ServiceRequest(),
+                    serviceRequest,
                     authentication,
                     serviceProviderId,
                     categoryId,
@@ -52,6 +69,11 @@ public class ServiceController {
             );
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body("Service request created successfully.");
+        } catch (JsonProcessingException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Invalid JSON format.");
+        } catch (IOException e) {
+            return new ResponseEntity<>("An error occurred while processing the image.", HttpStatus.BAD_REQUEST);
         } catch (EntityNotFoundException | ServiceProviderNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(e.getMessage());
@@ -59,6 +81,7 @@ public class ServiceController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("An error occurred while processing the request.");
         }
+
     }
 
     @GetMapping("/customer")
@@ -69,9 +92,10 @@ public class ServiceController {
 
     @PostMapping("/create/{categoryId}")
     public ResponseEntity<?> createServiceRequest(
-            @RequestBody CreateServiceAndAppointmentDTO requestDTO,
+            @RequestParam("requestDTOData") String requestDTOData,
             Authentication authentication,
-            @PathVariable Long categoryId) {
+            @PathVariable Long categoryId,
+            @RequestParam(value = "files", required = false) List<MultipartFile> files) {
 
         // Check if the user is authenticated
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -79,7 +103,16 @@ public class ServiceController {
         }
 
         try {
-            requestService.createServiceRequestSystemWide(new ServiceRequest(),
+            CreateServiceAndAppointmentDTO requestDTO = objectMapper.readValue(requestDTOData, CreateServiceAndAppointmentDTO.class);
+            ServiceRequest serviceRequest = new ServiceRequest();
+            if (files != null && !files.isEmpty()) {
+                for (MultipartFile file : files) {
+                    System.out.println(file.getOriginalFilename());
+                    serviceRequest.setPictures(file.getBytes());
+                }
+            }
+
+            requestService.createServiceRequestSystemWide(serviceRequest,
                     authentication,
                     categoryId,
                     requestDTO.getCreateServiceRequestDTO().getDescription(),
@@ -176,43 +209,5 @@ public class ServiceController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to assign service provider: " + e.getMessage());
         }
     }
-
-    @PreAuthorize("hasRole('ROLE_CUSTOMER')")
-    @PostMapping("/create/test/{serviceProviderId}/{categoryId}")
-    public ResponseEntity<String> createServiceRequest2(
-            @RequestParam CreateServiceAndAppointmentDTO requestDTO,
-            Authentication authentication,
-            @PathVariable Long serviceProviderId,
-            @PathVariable Long categoryId,
-            @RequestParam(value = "resume", required = false) MultipartFile resume
-    )
-    {
-
-
-        try {
-//            CreateServiceAndAppointmentDTO requestDTO =
-            // Call the service method to create the service request
-            requestService.createServiceRequest(
-                    new ServiceRequest(),
-                    authentication,
-                    serviceProviderId,
-                    categoryId,
-                    requestDTO.getCreateServiceRequestDTO().getDescription(),
-                    requestDTO.getCreateServiceRequestDTO().getAddress(),
-                    requestDTO.getCreateAppointmentDTO().getAppointmentDate(),
-                    requestDTO.getCreateAppointmentDTO().getAppointmentMessage()
-
-            );
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body("Service request created successfully.");
-        } catch (EntityNotFoundException | ServiceProviderNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("An error occurred while processing the request.");
-        }
-    }
-
 
 }
