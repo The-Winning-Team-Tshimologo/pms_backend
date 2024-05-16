@@ -12,7 +12,7 @@ public class ReviewDTO {
     private Long reviewId;
     private String feedback;
     private int rating;
-    private Customer customer;
-    private ServiceRequest service;
-    private ServiceProvider serviceProvider;
+    private CustomerDTO customer;
+    private ServiceRequestDTO service;
+//    private ServiceProvider serviceProvider;
 }

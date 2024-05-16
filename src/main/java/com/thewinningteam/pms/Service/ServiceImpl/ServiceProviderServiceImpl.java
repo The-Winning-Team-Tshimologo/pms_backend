@@ -10,6 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.Hibernate;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -82,28 +83,23 @@ public class ServiceProviderServiceImpl implements ServiceProviderService {
         serviceProvider.setProfile(profile);
 
         //Category
-        Category category = serviceProvider.getCategory();
-        System.out.println("foundCategory "+  category);
-        Optional<Category> optionalCategory = categoryRepository.findByName(category.getName());
+        // PageRequest.of(0, 1) limits the number of results returned to 1
+        Optional<Category> optionalCategory =
+                categoryRepository.findFirstByName(serviceProvider.getCategory().getName(), PageRequest.of(0, 1));
 
         if (optionalCategory.isPresent()) {
-            System.out.println("test 3");
-            category = optionalCategory.get();
-            System.out.println("foundCategory 3 "+  category);
+            serviceProvider.setCategory(optionalCategory.get());
         } else {
-            System.out.println("test 4");
-            category = categoryRepository.save(category);
-            System.out.println("foundCategory 4 "+  category);
+            Category savedCategory = categoryRepository.save(serviceProvider.getCategory());
+            serviceProvider.setCategory(savedCategory);
         }
-        serviceProvider.setCategory(category);
-        System.out.println("test 5 ");
         return serviceProviderRepository.save(serviceProvider);
     }
 
     @Override
     public ServiceProviderDTO GetServiceProviderById(Long userID) {
         ServiceProvider serviceProvider = serviceProviderRepository.findById(userID)
-                .orElseThrow(() -> new UsernameNotFoundException("Service Provider not found with ID: " +userID));;
+                .orElseThrow(() -> new UsernameNotFoundException("Service Provider not found with ID: " +userID));
         return adminService.convertToDto(serviceProvider);
     }
 

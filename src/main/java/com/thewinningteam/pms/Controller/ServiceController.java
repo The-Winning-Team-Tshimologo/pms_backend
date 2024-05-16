@@ -15,6 +15,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -175,4 +176,43 @@ public class ServiceController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to assign service provider: " + e.getMessage());
         }
     }
+
+    @PreAuthorize("hasRole('ROLE_CUSTOMER')")
+    @PostMapping("/create/test/{serviceProviderId}/{categoryId}")
+    public ResponseEntity<String> createServiceRequest2(
+            @RequestParam CreateServiceAndAppointmentDTO requestDTO,
+            Authentication authentication,
+            @PathVariable Long serviceProviderId,
+            @PathVariable Long categoryId,
+            @RequestParam(value = "resume", required = false) MultipartFile resume
+    )
+    {
+
+
+        try {
+//            CreateServiceAndAppointmentDTO requestDTO =
+            // Call the service method to create the service request
+            requestService.createServiceRequest(
+                    new ServiceRequest(),
+                    authentication,
+                    serviceProviderId,
+                    categoryId,
+                    requestDTO.getCreateServiceRequestDTO().getDescription(),
+                    requestDTO.getCreateServiceRequestDTO().getAddress(),
+                    requestDTO.getCreateAppointmentDTO().getAppointmentDate(),
+                    requestDTO.getCreateAppointmentDTO().getAppointmentMessage()
+
+            );
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body("Service request created successfully.");
+        } catch (EntityNotFoundException | ServiceProviderNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An error occurred while processing the request.");
+        }
+    }
+
+
 }

@@ -37,7 +37,8 @@ public class ServiceProvider extends User {
     @Column(name = "acceptance_status")
     private AcceptanceStatus acceptanceStatus = AcceptanceStatus.PENDING;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
     private Category category;
 
     @ManyToOne(fetch = FetchType.EAGER)
