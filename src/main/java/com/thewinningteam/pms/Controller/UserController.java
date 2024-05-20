@@ -12,11 +12,7 @@ import com.thewinningteam.pms.emailservice.EmailService;
 import com.thewinningteam.pms.Service.ServiceProviderService;
 import com.thewinningteam.pms.emailservice.EmailTemplateName;
 import com.thewinningteam.pms.model.*;
-import com.thewinningteam.pms.request.AuthenticationRequest;
-import com.thewinningteam.pms.response.AuthenticationResponse;
-import jakarta.mail.MessagingException;
-import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;

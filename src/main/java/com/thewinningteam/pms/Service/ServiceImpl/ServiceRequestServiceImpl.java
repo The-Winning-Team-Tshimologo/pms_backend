@@ -22,10 +22,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
-
-import java.io.IOException;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.List;
@@ -203,51 +200,136 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
         return serviceRepository.countAllServiceRequests();
     }
 
-    // Method to accept a service request
     @Override
-    @Transactional
     public void acceptServiceRequest(Long serviceRequestId) {
-        Authentication authentication = getAuthentication();
-        validateAuthentication(authentication);
+        // Get the authentication object from the security context
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        ServiceProvider serviceProvider = getServiceProviderFromAuthentication(authentication);
-        ServiceRequest serviceRequest = validateAndRetrieveServiceRequest(serviceRequestId, serviceProvider);
+        // Check if the authentication object is not null and the user is authenticated
+        if (authentication != null && authentication.isAuthenticated()) {
+            // Retrieve the service provider from the authentication principal
+            ServiceProvider serviceProvider = (ServiceProvider) authentication.getPrincipal();
+            Long serviceProviderId = serviceProvider.getUserId();
 
-        serviceRequest.setStatus(ServiceStatus.ACCEPTED);
-        serviceRepository.save(serviceRequest);
-    }
+            // Retrieve the service request by its ID
+            Optional<ServiceRequest> optionalServiceRequest = serviceRepository.findById(serviceRequestId);
 
-    // Method to decline a service request
-    @Override
-    @Transactional
-    public void declineServiceRequest(Long serviceRequestId) {
-        Authentication authentication = getAuthentication();
-        validateAuthentication(authentication);
+            // Check if the service request exists
+            if (optionalServiceRequest.isPresent()) {
+                ServiceRequest serviceRequest = optionalServiceRequest.get();
 
-        ServiceProvider serviceProvider = getServiceProviderFromAuthentication(authentication);
-        ServiceRequest serviceRequest = validateAndRetrieveServiceRequest(serviceRequestId, serviceProvider);
+                // Check if the connected service provider matches the service provider of the service request
+                if (!Objects.equals(serviceProviderId, serviceRequest.getServiceProvider().getUserId())) {
+                    throw new IllegalArgumentException("Service request does not belong to the connected service provider");
+                }
 
-        serviceRequest.setStatus(ServiceStatus.REJECTED);
-        serviceRepository.save(serviceRequest);
-    }
+                // Retrieve the customer associated with the service request
+                Customer customer = serviceRequest.getCustomer();
 
-    // Method to withdraw an application for a service request
-    @Override
-    @Transactional
-    public void withdrawApplication(Long serviceRequestId) {
-        Authentication authentication = getAuthentication();
-        validateAuthentication(authentication);
+                // Update the status of the service request to indicate acceptance
+                serviceRequest.setStatus(ServiceStatus.ACCEPTED);
 
-        ServiceProvider serviceProvider = getServiceProviderFromAuthentication(authentication);
-        ServiceRequest serviceRequest = validateAndRetrieveServiceRequest(serviceRequestId, serviceProvider);
-
-        if (serviceRequest.getStatus() != ServiceStatus.ACCEPTED) {
-            throw new IllegalStateException("Cannot withdraw application for a service request that is not accepted");
+                // Save the updated service request
+                serviceRepository.save(serviceRequest);
+            } else {
+                // Handle the case where the service request with the given ID is not found
+                throw new IllegalArgumentException("Service request with ID " + serviceRequestId + " not found");
+            }
+        } else {
+            // Handle the case where the user is not authenticated
+            throw new RuntimeException("User not authenticated");
         }
+    }
 
-        serviceRequest.setServiceProvider(null);
-        serviceRequest.setStatus(ServiceStatus.REJECTED);
-        serviceRepository.save(serviceRequest);
+    @Override
+    public void declineServiceRequest(Long serviceRequestId) {
+        // Get the authentication object from the security context
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        // Check if the authentication object is not null and the user is authenticated
+        if (authentication != null && authentication.isAuthenticated()) {
+            // Retrieve the service provider from the authentication principal
+            ServiceProvider serviceProvider = (ServiceProvider) authentication.getPrincipal();
+            Long serviceProviderId = serviceProvider.getUserId();
+
+            // Retrieve the service request by its ID
+            Optional<ServiceRequest> optionalServiceRequest = serviceRepository.findById(serviceRequestId);
+
+            // Check if the service request exists
+            if (optionalServiceRequest.isPresent()) {
+                ServiceRequest serviceRequest = optionalServiceRequest.get();
+
+                // Check if the connected service provider matches the service provider of the service request
+                if (!Objects.equals(serviceProviderId, serviceRequest.getServiceProvider().getUserId())) {
+                    throw new IllegalArgumentException("Service request does not belong to the connected service provider");
+                }
+
+                // Retrieve the customer associated with the service request
+                Customer customer = serviceRequest.getCustomer();
+
+                // Update the status of the service request to indicate decline
+                serviceRequest.setStatus(ServiceStatus.REJECTED);
+
+                // Save the updated service request
+                serviceRepository.save(serviceRequest);
+            } else {
+                // Handle the case where the service request with the given ID is not found
+                throw new IllegalArgumentException("Service request with ID " + serviceRequestId + " not found");
+            }
+        } else {
+            // Handle the case where the user is not authenticated
+            throw new RuntimeException("User not authenticated");
+        }
+    }
+    @Override
+    public void withdrawApplication(Long serviceRequestId)
+
+    {
+        // Get the authentication object from the security context
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        // Check if the authentication object is not null and the user is authenticated
+        if (authentication != null && authentication.isAuthenticated()) {
+            // Retrieve the service provider from the authentication principal
+            ServiceProvider serviceProvider = (ServiceProvider) authentication.getPrincipal();
+            Long serviceProviderId = serviceProvider.getUserId();
+
+            // Retrieve the service request by its ID
+            Optional<ServiceRequest> optionalServiceRequest = serviceRepository.findById(serviceRequestId);
+
+            // Check if the service request exists
+            if (optionalServiceRequest.isPresent()) {
+                ServiceRequest serviceRequest = optionalServiceRequest.get();
+
+                // Check if the connected service provider matches the service provider of the service request
+                if (!Objects.equals(serviceProviderId, serviceRequest.getServiceProvider().getUserId())) {
+                    throw new IllegalArgumentException("Service request does not belong to the connected service provider");
+                }
+
+                // Check if the service request is in a state where the application can be withdrawn
+                if (serviceRequest.getStatus() != ServiceStatus.ACCEPTED) {
+                    throw new IllegalStateException("Cannot withdraw application for a service request that is not accepted");
+                }
+
+                // Set the service provider of the service request to null to withdraw the application
+                serviceRequest.setServiceProvider(null);
+
+                // Retrieve the customer associated with the service request
+                Customer customer = serviceRequest.getCustomer();
+
+                // Update the status of the service request to indicate withdrawal
+                serviceRequest.setStatus(ServiceStatus.REJECTED);
+
+                // Save the updated service request
+                serviceRepository.save(serviceRequest);
+            } else {
+                // Handle the case where the service request with the given ID is not found
+                throw new IllegalArgumentException("Service request with ID " + serviceRequestId + " not found");
+            }
+        } else {
+            // Handle the case where the user is not authenticated
+            throw new RuntimeException("User not authenticated");
+        }
     }
 
     // Helper method to validate authentication

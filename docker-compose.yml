@@ -23,6 +23,19 @@ services:
     ports:
       - "1080:1080"
       - "1025:1025"
+  
+  activemq:
+    container_name: activemq
+    image: rmohr/activemq:latest
+    environment:
+      ACTIVEMQ_ADMIN_LOGIN: admin
+      ACTIVEMQ_ADMIN_PASSWORD: admin
+    ports:
+      - "61616:61616"
+      - "8161:8161"
+    networks:
+      - pms-backend
+    restart: unless-stopped
 
 networks:
   pms-backend:

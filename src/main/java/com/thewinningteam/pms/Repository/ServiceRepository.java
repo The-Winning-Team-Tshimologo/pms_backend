@@ -27,7 +27,7 @@ public interface ServiceRepository extends JpaRepository<ServiceRequest,Long> {
             "WHERE sr.serviceProvider.userId = :serviceProviderId")
     List<ServiceDTO> findServiceRequestsWithCustomerByServiceProviderId(Long serviceProviderId);
 
-    @Query("SELECT NEW com.thewinningteam.pms.DTO.RequestSystemWideDTO(s.customer.userId, s.serviceId, s.customer.profilePicture, s.address.streetName, s.address.city, SIZE(s.customer.reviews), s.customer.firstName, s.customer.lastName, s.category.name) FROM ServiceRequest s WHERE s.serviceProvider.userId IS NULL")
+    @Query("SELECT NEW com.thewinningteam.pms.DTO.RequestSystemWideDTO(s.customer.userId, s.customer.userName, s.serviceId, s.customer.profilePicture, s.address.streetName, s.address.city, SIZE(s.customer.reviews), s.customer.firstName, s.customer.lastName, s.category.name) FROM ServiceRequest s WHERE s.serviceProvider.userId IS NULL")
     List<RequestSystemWideDTO> findAllWithoutServiceProvider();
 
     @Query("SELECT NEW com.thewinningteam.pms.DTO.CustomerServiceRequestedDTO(sp.firstName, sp.lastName, s.status, sp.profilePicture, a.appointmentDate) " +

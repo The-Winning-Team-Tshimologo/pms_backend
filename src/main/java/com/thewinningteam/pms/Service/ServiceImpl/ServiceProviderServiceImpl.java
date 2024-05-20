@@ -129,6 +129,7 @@ public class ServiceProviderServiceImpl implements ServiceProviderService {
 
     public BrowseServiceProviderDTO mapToBrowseServiceProviderDTO(ServiceProvider serviceProvider) {
         BrowseServiceProviderDTO dto = new BrowseServiceProviderDTO();
+        dto.setUserName(serviceProvider.getUsername());
         dto.setUserId(serviceProvider.getUserId());
         dto.setFirstName(serviceProvider.getFirstName());
         dto.setLastName(serviceProvider.getLastName());
@@ -138,7 +139,8 @@ public class ServiceProviderServiceImpl implements ServiceProviderService {
         // Calculate average rating
         List<Review> reviews = serviceProvider.getReviews();
         if (reviews != null && !reviews.isEmpty()) {
-            double averageRating = reviews.stream()
+            double averageRating = reviews
+                    .stream()
                     .mapToDouble(Review::getRating)
                     .average()
                     .orElse(0.0);

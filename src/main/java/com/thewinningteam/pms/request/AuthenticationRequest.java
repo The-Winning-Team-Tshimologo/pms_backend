@@ -1,5 +1,7 @@
 package com.thewinningteam.pms.request;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -22,4 +24,11 @@ public class AuthenticationRequest {
     @NotBlank(message = "Password is mandatory")
     @Size(min = 8, message = "Password should be 8 characters long minimum")
     private String password;
+
+    @JsonCreator
+    public AuthenticationRequest(@JsonProperty("email") String email,
+                                 @JsonProperty("password") String password) {
+        this.email = email;
+        this.password = password;
+    }
 }
