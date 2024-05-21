@@ -23,7 +23,7 @@ public class ServiceProvider extends User {
 
     @Lob
     @Column(name = "qualifications", columnDefinition = "LONGBLOB")
-    private byte[] qualifications;
+    private byte[] qualification;
 
     @Lob
     @Column(name = "criminal_record", columnDefinition = "LONGBLOB")
