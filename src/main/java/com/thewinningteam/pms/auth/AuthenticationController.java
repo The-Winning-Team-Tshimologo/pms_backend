@@ -93,33 +93,10 @@ public class AuthenticationController {
 
         Map<String, Object> response = new HashMap<>();
         try {
-<<<<<<< HEAD
-            System.out.println(profile);
-            Profile spProfile = objectMapper.readValue(profile, Profile.class);
-            System.out.println(data);
-            ServiceProvider serviceProvider = objectMapper.readValue(data, ServiceProvider.class);
-//            System.out.println(profile);
-//            Profile spProfile = objectMapper.readValue(profile, Profile.class);
 
-            serviceProvider.setEnabled(true);
-            if (profilePicture != null && !profilePicture.isEmpty()) {
-                serviceProvider.setProfilePicture(profilePicture.getBytes());
-            }
-            if (identityDocument != null && !identityDocument.isEmpty()) {
-                serviceProvider.setIdentityDocument(identityDocument.getBytes());
-            }if (bankStatement != null && !bankStatement.isEmpty()) {
-                serviceProvider.setBankStatement(bankStatement.getBytes());
-            }if (CriminalRecord != null && !CriminalRecord.isEmpty()) {
-                serviceProvider.setCriminalRecord(CriminalRecord.getBytes());
-            }if (resume != null && !resume.isEmpty()) {
-                serviceProvider.setResume(resume.getBytes());
-            }   
-            serviceProvider.setProfile(spProfile);
-
-=======
             ServiceProvider serviceProvider = parseServiceProvider(data, profile);
             handleFiles(serviceProvider, profilePicture, identityDocument, qualification, criminalRecord, resume, bankStatement);
->>>>>>> baeb7ea183c1091ddc5571806b89b84de0cc64c3
+
             ServiceProvider savedCustomer = serviceProviderService.SaveServiceProvider(serviceProvider);
             response.put("message", "Service Provider created successfully");
             response.put("status", "success");

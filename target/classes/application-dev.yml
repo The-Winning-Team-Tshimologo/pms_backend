@@ -4,11 +4,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/pmsDB?createDatabaseIfNotExist=true
     username: root
-<<<<<<< HEAD
     password: Obese/towny5
-=======
-    password: Incide+koil8
->>>>>>> baeb7ea183c1091ddc5571806b89b84de0cc64c3
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
