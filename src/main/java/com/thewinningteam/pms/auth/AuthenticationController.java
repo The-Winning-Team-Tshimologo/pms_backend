@@ -88,9 +88,12 @@ public class AuthenticationController {
                                                           @RequestParam("profile") String profile) {
 
         try {
-
-            ServiceProvider serviceProvider = objectMapper.readValue(data, ServiceProvider.class);
+            System.out.println(profile);
             Profile spProfile = objectMapper.readValue(profile, Profile.class);
+            System.out.println(data);
+            ServiceProvider serviceProvider = objectMapper.readValue(data, ServiceProvider.class);
+//            System.out.println(profile);
+//            Profile spProfile = objectMapper.readValue(profile, Profile.class);
 
             serviceProvider.setEnabled(true);
             if (profilePicture != null && !profilePicture.isEmpty()) {
@@ -104,7 +107,7 @@ public class AuthenticationController {
                 serviceProvider.setCriminalRecord(CriminalRecord.getBytes());
             }if (resume != null && !resume.isEmpty()) {
                 serviceProvider.setResume(resume.getBytes());
-            }
+            }   
             serviceProvider.setProfile(spProfile);
 
             ServiceProvider savedCustomer = serviceProviderService.SaveServiceProvider(serviceProvider);

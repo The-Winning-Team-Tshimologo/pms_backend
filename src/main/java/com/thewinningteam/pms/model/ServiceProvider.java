@@ -1,9 +1,7 @@
 package com.thewinningteam.pms.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 
@@ -12,6 +10,8 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Getter
+@Setter
 public class ServiceProvider extends User {
     @Lob
     @Column(name = "identity_document", columnDefinition = "LONGBLOB")

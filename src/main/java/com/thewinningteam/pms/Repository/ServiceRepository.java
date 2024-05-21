@@ -5,6 +5,7 @@ package com.thewinningteam.pms.Repository;
 import com.thewinningteam.pms.DTO.CustomerServiceRequestedDTO;
 import com.thewinningteam.pms.DTO.RequestSystemWideDTO;
 import com.thewinningteam.pms.DTO.ServiceDTO;
+import com.thewinningteam.pms.DTO.ServiceRequestWithAppointmentDTO;
 import com.thewinningteam.pms.model.Category;
 
 import com.thewinningteam.pms.model.ServiceRequest;
@@ -46,6 +47,13 @@ public interface ServiceRepository extends JpaRepository<ServiceRequest,Long> {
 
 
     ServiceRequest findByServiceIdAndServiceProviderUserId(Long serviceId, Long serviceProviderId);
+
+    @Query("SELECT new com.thewinningteam.pms.DTO.ServiceRequestWithAppointmentDTO(sr.serviceId, sr.pictures, sr.address, sr.description, sr.status, sr.customer, sr.category, a.appointmentDate) " +
+            "FROM ServiceRequest sr " +
+            "LEFT JOIN Appointment a ON sr.serviceId = a.service.serviceId " +
+            "WHERE sr.serviceProvider.userId = :serviceProviderId")
+    List<ServiceRequestWithAppointmentDTO> findServiceRequestsWithAppointmentByServiceProviderId(Long serviceProviderId);
+
 }
 
 

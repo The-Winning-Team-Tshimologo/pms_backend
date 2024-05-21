@@ -54,7 +54,6 @@ public class ServiceController {
                     serviceRequest.setPictures(file.getBytes());
                 }
             }
-
             // Call the service method to create the service request
             requestService.createServiceRequest(
                     serviceRequest,
@@ -139,9 +138,9 @@ public class ServiceController {
 
 
     @GetMapping("/serviceRequests")
-    public ResponseEntity<List<ServiceDTO>> getServiceRequestsWithCustomerByConnectedServiceProvider() {
+    public ResponseEntity<List<ServiceRequestWithAppointmentDTO>> getServiceRequestsWithCustomerByConnectedServiceProvider() {
         try {
-            List<ServiceDTO> serviceDTOs = requestService.findServiceRequestsWithCustomerByConnectedServiceProvider();
+            List<ServiceRequestWithAppointmentDTO> serviceDTOs = requestService.findServiceRequestsWithCustomerByConnectedServiceProvider2();
             return new ResponseEntity<>(serviceDTOs, HttpStatus.OK);
         } catch (Exception e) {
             // Handle exceptions appropriately, such as logging or returning an error response

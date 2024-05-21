@@ -3,6 +3,7 @@ package com.thewinningteam.pms.Service.ServiceImpl;
 import com.thewinningteam.pms.DTO.CustomerServiceRequestedDTO;
 import com.thewinningteam.pms.DTO.RequestSystemWideDTO;
 import com.thewinningteam.pms.DTO.ServiceDTO;
+import com.thewinningteam.pms.DTO.ServiceRequestWithAppointmentDTO;
 import com.thewinningteam.pms.Repository.AppointmentRepository;
 import com.thewinningteam.pms.Repository.ServiceProviderRepository;
 import com.thewinningteam.pms.Repository.ServiceRepository;
@@ -115,6 +116,15 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<ServiceRequestWithAppointmentDTO> findServiceRequestsWithCustomerByConnectedServiceProvider2() {
+        Authentication authentication = getAuthentication();
+        ServiceProvider serviceProvider = getServiceProviderFromAuthentication(authentication);
+
+        return serviceRepository.findServiceRequestsWithAppointmentByServiceProviderId(serviceProvider.getUserId());
+    }
+
+
 
     // Method to find all service requests system-wide
     @Override
@@ -150,6 +160,7 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
         appointment.setMessage(appointmentMessage);
         appointment.setCustomer(customer);
         appointment.setService(request);
+        appointment.setServiceProvider(request.getServiceProvider());
 
         appointmentRepository.save(appointment);
     }
