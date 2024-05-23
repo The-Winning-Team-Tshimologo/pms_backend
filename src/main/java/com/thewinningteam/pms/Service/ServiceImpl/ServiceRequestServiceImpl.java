@@ -124,6 +124,16 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
         return serviceRepository.findServiceRequestsWithAppointmentByServiceProviderId(serviceProvider.getUserId());
     }
 
+    @Override
+    public ServiceRequestWithAppointmentDTO findServiceRequestsWithAppointmentById(Long serviceId) {
+//        Authentication authentication = getAuthentication();
+//        ServiceProvider serviceProvider = getServiceProviderFromAuthentication(authentication);
+
+        return serviceRepository.findServiceRequestWithAppointmentByServiceId(serviceId);
+    }
+
+
+
 
 
     // Method to find all service requests system-wide

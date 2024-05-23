@@ -40,6 +40,8 @@ public interface ServiceRequestService {
 
   List<ServiceRequestWithAppointmentDTO> findServiceRequestsWithCustomerByConnectedServiceProvider2();
 
+  ServiceRequestWithAppointmentDTO findServiceRequestsWithAppointmentById(Long serviceId);
+
   List<RequestSystemWideDTO> findAllServiceRequestedSystemWide(Authentication authentication);
 
   void confirmCompletedProject(Long serviceRequestId, Authentication authentication);
