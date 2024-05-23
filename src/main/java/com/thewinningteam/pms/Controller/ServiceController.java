@@ -54,7 +54,6 @@ public class ServiceController {
                     serviceRequest.setPictures(file.getBytes());
                 }
             }
-
             // Call the service method to create the service request
             requestService.createServiceRequest(
                     serviceRequest,
@@ -112,6 +111,7 @@ public class ServiceController {
                 }
             }
 
+
             requestService.createServiceRequestSystemWide(serviceRequest,
                     authentication,
                     categoryId,
@@ -119,6 +119,8 @@ public class ServiceController {
                     requestDTO.getCreateServiceRequestDTO().getAddress(),
                     requestDTO.getCreateAppointmentDTO().getAppointmentDate(),
                     requestDTO.getCreateAppointmentDTO().getAppointmentMessage());
+
+            System.out.println("test 2 ");
 
             return ResponseEntity.ok("Service request created successfully");
         } catch (EntityNotFoundException e) {
@@ -139,15 +141,27 @@ public class ServiceController {
 
 
     @GetMapping("/serviceRequests")
-    public ResponseEntity<List<ServiceDTO>> getServiceRequestsWithCustomerByConnectedServiceProvider() {
+    public ResponseEntity<List<ServiceRequestWithAppointmentDTO>> getServiceRequestsWithCustomerByConnectedServiceProvider() {
         try {
-            List<ServiceDTO> serviceDTOs = requestService.findServiceRequestsWithCustomerByConnectedServiceProvider();
+            List<ServiceRequestWithAppointmentDTO> serviceDTOs = requestService.findServiceRequestsWithCustomerByConnectedServiceProvider2();
             return new ResponseEntity<>(serviceDTOs, HttpStatus.OK);
         } catch (Exception e) {
             // Handle exceptions appropriately, such as logging or returning an error response
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @PreAuthorize("hasAnyRole('ROLE_CUSTOMER', 'ROLE_SERVICE_PROVIDER')")
+    @GetMapping("/serviceRequests/{serviceRequestId}")
+    public ResponseEntity<ServiceRequestWithAppointmentDTO> getServiceRequestsWithAppointmentById(@PathVariable Long serviceRequestId) {
+        try {
+            ServiceRequestWithAppointmentDTO serviceDTOs = requestService.findServiceRequestsWithAppointmentById(serviceRequestId);
+            return new ResponseEntity<>(serviceDTOs, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 
     @PreAuthorize("hasRole('ROLE_SERVICE_PROVIDER')")
     @PostMapping("/accept/{serviceRequestId}")

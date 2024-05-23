@@ -1,9 +1,6 @@
 package com.thewinningteam.pms.Service;
 
-import com.thewinningteam.pms.DTO.AddressDTO;
-import com.thewinningteam.pms.DTO.CustomerServiceRequestedDTO;
-import com.thewinningteam.pms.DTO.RequestSystemWideDTO;
-import com.thewinningteam.pms.DTO.ServiceDTO;
+import com.thewinningteam.pms.DTO.*;
 import com.thewinningteam.pms.model.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.multipart.MultipartFile;
@@ -40,6 +37,11 @@ public interface ServiceRequestService {
           Timestamp appointmentDate,
           String appointmentMessage);
   List<CustomerServiceRequestedDTO> getAllServiceRequestsForConnectedCustomer(Authentication connectedUser);
+
+  List<ServiceRequestWithAppointmentDTO> findServiceRequestsWithCustomerByConnectedServiceProvider2();
+
+  ServiceRequestWithAppointmentDTO findServiceRequestsWithAppointmentById(Long serviceId);
+
   List<RequestSystemWideDTO> findAllServiceRequestedSystemWide(Authentication authentication);
 
   void confirmCompletedProject(Long serviceRequestId, Authentication authentication);

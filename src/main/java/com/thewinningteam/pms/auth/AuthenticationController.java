@@ -30,6 +30,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 @RestController
@@ -79,51 +81,65 @@ public class AuthenticationController {
 
 
     @PostMapping("/signup-sp")
-    public ResponseEntity<String> registerServiceProvider(@RequestParam("data") String data,
-                                                          @RequestParam(value = "profilePicture", required = false) MultipartFile profilePicture,
-                                                          @RequestParam(value = "identityDocument", required = false) MultipartFile identityDocument,
-                                                          @RequestParam(value = "bankStatement", required = false) MultipartFile bankStatement,
-                                                          @RequestParam(value = "criminalRecord", required = false) MultipartFile CriminalRecord,
-                                                          @RequestParam(value = "resume", required = false) MultipartFile resume,
-                                                          @RequestParam("profile") String profile) {
+    public ResponseEntity<Map<String, Object>> registerServiceProvider(
+            @RequestParam("data") String data,
+            @RequestParam(value = "profilePicture", required = false) MultipartFile profilePicture,
+            @RequestParam(value = "identityDocument", required = false) MultipartFile identityDocument,
+            @RequestParam(value = "qualification", required = false) MultipartFile qualification,
+            @RequestParam(value = "criminalRecord", required = false) MultipartFile criminalRecord,
+            @RequestParam(value = "resume", required = false) MultipartFile resume,
+            @RequestParam(value = "bankStatement", required = false) MultipartFile bankStatement,
+            @RequestParam("profile") String profile) {
 
+        Map<String, Object> response = new HashMap<>();
         try {
 
-            ServiceProvider serviceProvider = objectMapper.readValue(data, ServiceProvider.class);
-            Profile spProfile = objectMapper.readValue(profile, Profile.class);
-
-            serviceProvider.setEnabled(true);
-            if (profilePicture != null && !profilePicture.isEmpty()) {
-                serviceProvider.setProfilePicture(profilePicture.getBytes());
-            }
-            if (identityDocument != null && !identityDocument.isEmpty()) {
-                serviceProvider.setIdentityDocument(identityDocument.getBytes());
-            }if (bankStatement != null && !bankStatement.isEmpty()) {
-                serviceProvider.setBankStatement(bankStatement.getBytes());
-            }if (CriminalRecord != null && !CriminalRecord.isEmpty()) {
-                serviceProvider.setCriminalRecord(CriminalRecord.getBytes());
-            }if (resume != null && !resume.isEmpty()) {
-                serviceProvider.setResume(resume.getBytes());
-            }
-            serviceProvider.setProfile(spProfile);
+            ServiceProvider serviceProvider = parseServiceProvider(data, profile);
+            handleFiles(serviceProvider, profilePicture, identityDocument, qualification, criminalRecord, resume, bankStatement);
 
             ServiceProvider savedCustomer = serviceProviderService.SaveServiceProvider(serviceProvider);
-            return new ResponseEntity<>("Service Provider created successfully.", HttpStatus.CREATED);
-
+            response.put("message", "Service Provider created successfully");
+            response.put("status", "success");
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (JsonProcessingException e) {
-            return new ResponseEntity<>("Invalid JSON format.", HttpStatus.BAD_REQUEST);
-        } catch (IllegalArgumentException e) {
-            if (e.getMessage().equals("A service provider with the same email or username already exists.")) {
-                return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-            } else {
-                return new ResponseEntity<>("An error occurred.", HttpStatus.BAD_REQUEST);
-            }
-        } catch (IOException e) {
-            return new ResponseEntity<>("An error occurred while processing the image.", HttpStatus.BAD_REQUEST);
-
-
+            response.put("message", "Invalid JSON format");
+            response.put("status", "error");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        } catch (IllegalArgumentException | IOException e) {
+            response.put("message", e.getMessage());
+            response.put("status", "error");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
+
     }
 
+    private ServiceProvider parseServiceProvider(String data, String profile) throws JsonProcessingException {
+        ServiceProvider serviceProvider = objectMapper.readValue(data, ServiceProvider.class);
+        Profile spProfile = objectMapper.readValue(profile, Profile.class);
+        serviceProvider.setEnabled(true);
+        serviceProvider.setProfile(spProfile);
+        return serviceProvider;
+    }
+
+    private void handleFiles(ServiceProvider serviceProvider, MultipartFile... files) throws IOException {
+        if (files[0] != null && !files[0].isEmpty()) {
+            serviceProvider.setProfilePicture(files[0].getBytes());
+        }
+        if (files[1] != null && !files[1].isEmpty()) {
+            serviceProvider.setIdentityDocument(files[1].getBytes());
+        }
+        if (files[2] != null && !files[2].isEmpty()) {
+            serviceProvider.setQualification(files[2].getBytes());
+        }
+        if (files[3] != null && !files[3].isEmpty()) {
+            serviceProvider.setCriminalRecord(files[3].getBytes());
+        }
+        if (files[4] != null && !files[4].isEmpty()) {
+            serviceProvider.setResume(files[4].getBytes());
+        }
+        if (files[5] != null && !files[5].isEmpty()) {
+            serviceProvider.setBankStatement(files[5].getBytes());
+        }
+    }
 
 }

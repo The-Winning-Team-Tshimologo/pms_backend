@@ -47,12 +47,8 @@ public class AdminServiceImpl implements AdminService {
     }
 
     public ServiceProviderDTO convertToDto(ServiceProvider serviceProvider) {
-        System.out.println("test 1 " + serviceProvider.getName() + " uid " + serviceProvider.getUserId());
         ServiceProviderDTO serviceProviderDTO = modelMapper.map(serviceProvider, ServiceProviderDTO.class);
         serviceProviderDTO.setRole(modelMapper.map(serviceProvider.getRoles(), RoleDTO.class));
-
-        System.out.println("ses 1");
-
 
         List<ReviewDTO> reviewDTOs = new ArrayList<>();
 //        for (Review review : serviceProvider.getReviews()) {
