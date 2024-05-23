@@ -7,6 +7,7 @@ import com.thewinningteam.pms.DTO.LoginDTO;
 import com.thewinningteam.pms.DTO.UserDetailsDTO;
 import com.thewinningteam.pms.Repository.TokenRepository;
 import com.thewinningteam.pms.Service.CustomerService;
+import com.thewinningteam.pms.Service.ServiceImpl.UserServiceImpl;
 import com.thewinningteam.pms.auth.AuthenticationService;
 import com.thewinningteam.pms.emailservice.EmailService;
 import com.thewinningteam.pms.Service.ServiceProviderService;
@@ -43,6 +44,7 @@ public class UserController {
     private final ServiceProviderService serviceProviderService;
     private final TokenRepository tokenRepository;
     private final EmailService emailService;
+    private final UserServiceImpl userService;
 
 
 
@@ -200,6 +202,16 @@ public class UserController {
             return userDetailsDTO;
         }
         return null; // Or handle the case where user details are not available
+    }
+
+    @PostMapping("/profile-picture")
+    public ResponseEntity<String> uploadProfilePicture(@RequestParam("file") MultipartFile file, Authentication authentication) {
+        try {
+            userService.saveProfilePicture(authentication, file);
+            return ResponseEntity.ok("Profile picture updated successfully.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
     }
 
 }
