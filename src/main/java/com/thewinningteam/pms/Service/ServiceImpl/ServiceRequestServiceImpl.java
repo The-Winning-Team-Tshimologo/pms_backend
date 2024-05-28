@@ -11,11 +11,13 @@ import com.thewinningteam.pms.Service.CategoryService;
 import com.thewinningteam.pms.Service.ServiceRequestService;
 import com.thewinningteam.pms.exception.ServiceProviderNotFoundException;
 import com.thewinningteam.pms.mapper.ServiceMapper;
+import com.thewinningteam.pms.message.ChatMessage;
 import com.thewinningteam.pms.model.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -43,6 +45,7 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
     private final ServiceProviderRepository serviceProviderRepository;
     private final CategoryService categoryService;
     private final AppointmentRepository appointmentRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     private static final Logger logger = LoggerFactory.getLogger(ServiceRequestServiceImpl.class);
 
@@ -293,6 +296,16 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
 
                 // Save the updated service request
                 serviceRepository.save(serviceRequest);
+
+                // Send WebSocket notification
+                String notificationMessage = "Your service request has been declined.";
+                ChatMessage chatMessage = new ChatMessage();
+                chatMessage.setContent(notificationMessage);
+                chatMessage.setSender("System");
+                chatMessage.setRecipient(customer.getUsername()); // Assuming Customer has a username field
+
+                messagingTemplate.convertAndSendToUser(
+                        customer.getUsername(), "/topic/messages", chatMessage);
             } else {
                 // Handle the case where the service request with the given ID is not found
                 throw new IllegalArgumentException("Service request with ID " + serviceRequestId + " not found");

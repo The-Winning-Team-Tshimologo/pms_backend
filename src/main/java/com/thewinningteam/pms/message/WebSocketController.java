@@ -9,7 +9,7 @@ import org.springframework.stereotype.Controller;
 @Controller
 public class WebSocketController {
 
-    @MessageMapping("/chat.send")
+    @MessageMapping("/chat")
     @SendTo("/topic/messages")
     public ChatMessage sendMessage(ChatMessage chatMessage) {
         return chatMessage;
