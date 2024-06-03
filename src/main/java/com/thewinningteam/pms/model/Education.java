@@ -20,7 +20,7 @@ public class Education {
     private String institution;
     private String qualification;
     private Date startDate;
-    private Date enddate;
+    private Date endDate;
 
     @ManyToOne
     @JoinColumn(name = "profile_id")
