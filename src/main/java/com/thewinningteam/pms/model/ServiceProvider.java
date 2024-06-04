@@ -27,7 +27,7 @@ public class ServiceProvider extends User {
 
     @Lob
     @Column(name = "criminal_record", columnDefinition = "LONGBLOB")
-    private byte[] CriminalRecord;
+    private byte[] criminalRecord;
 
     @Lob
     @Column(name = "resume", columnDefinition = "LONGBLOB")
@@ -51,6 +51,8 @@ public class ServiceProvider extends User {
 
     @OneToMany(mappedBy = "serviceProvider", cascade = CascadeType.ALL)
     private List<Review> reviews;
+
+    private int rating;
 
     private String bankName ;
 
