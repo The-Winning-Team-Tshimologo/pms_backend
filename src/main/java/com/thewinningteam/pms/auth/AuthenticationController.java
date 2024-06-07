@@ -93,24 +93,28 @@ public class AuthenticationController {
 
         Map<String, Object> response = new HashMap<>();
         try {
+            // Log incoming data for debugging
+            System.out.println("data: " + data);
+            System.out.println("profile: " + profile);
 
             ServiceProvider serviceProvider = parseServiceProvider(data, profile);
             handleFiles(serviceProvider, profilePicture, identityDocument, qualification, criminalRecord, resume, bankStatement);
 
-            ServiceProvider savedCustomer = serviceProviderService.SaveServiceProvider(serviceProvider);
+            ServiceProvider savedServiceProvider = serviceProviderService.SaveServiceProvider(serviceProvider);
             response.put("message", "Service Provider created successfully");
             response.put("status", "success");
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (JsonProcessingException e) {
-            response.put("message", "Invalid JSON format");
+            e.printStackTrace();
+            response.put("message", "Invalid JSON format: " + e.getOriginalMessage());
             response.put("status", "error");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         } catch (IllegalArgumentException | IOException e) {
+            e.printStackTrace();
             response.put("message", e.getMessage());
             response.put("status", "error");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
-
     }
 
     private ServiceProvider parseServiceProvider(String data, String profile) throws JsonProcessingException {

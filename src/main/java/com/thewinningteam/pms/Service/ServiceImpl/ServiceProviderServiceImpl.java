@@ -44,6 +44,11 @@ public class ServiceProviderServiceImpl implements ServiceProviderService {
         if (existingServiceProvider != null) {
             throw new IllegalArgumentException("A service provider with the same email or username already exists.");
         }
+
+        if (serviceProvider.getCategory() == null) {
+            throw new IllegalArgumentException("Category must be provided");
+        }
+
         Address address = serviceProvider.getAddress();
         address = addressRepository.save(address);
 
