@@ -165,21 +165,21 @@ public class ServiceController {
 
     @PreAuthorize("hasRole('ROLE_SERVICE_PROVIDER')")
     @PostMapping("/accept/{serviceRequestId}")
-    public ResponseEntity<?> acceptServiceRequest(@PathVariable Long serviceRequestId) {
+    public ResponseEntity<?> acceptServiceRequest(@PathVariable Long serviceRequestId) throws JsonProcessingException {
         requestService.acceptServiceRequest(serviceRequestId);
         return ResponseEntity.ok().build();
     }
 
     @PreAuthorize("hasRole('ROLE_SERVICE_PROVIDER')")
     @PostMapping("/decline/{serviceRequestId}")
-    public ResponseEntity<?> declineServiceRequest(@PathVariable Long serviceRequestId) {
+    public ResponseEntity<?> declineServiceRequest(@PathVariable Long serviceRequestId) throws JsonProcessingException {
         requestService.declineServiceRequest(serviceRequestId);
         return ResponseEntity.ok().build();
     }
 
     @PreAuthorize("hasRole('ROLE_SERVICE_PROVIDER')")
     @PostMapping("/withdraw/{serviceRequestId}")
-    public ResponseEntity<?> withdrawApplication(@PathVariable Long serviceRequestId) {
+    public ResponseEntity<?> withdrawApplication(@PathVariable Long serviceRequestId) throws JsonProcessingException {
         requestService.withdrawApplication(serviceRequestId);
         return ResponseEntity.ok().build();
     }

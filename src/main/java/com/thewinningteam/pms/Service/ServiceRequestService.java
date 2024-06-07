@@ -1,5 +1,6 @@
 package com.thewinningteam.pms.Service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.thewinningteam.pms.DTO.*;
 import com.thewinningteam.pms.model.*;
 import org.springframework.security.core.Authentication;
@@ -18,13 +19,13 @@ public interface ServiceRequestService {
           String description,
           Address address,
           Timestamp appointmentDate,
-          String appointmentMessage);
+          String appointmentMessage) throws JsonProcessingException;
   List<ServiceDTO> findServiceRequestsWithCustomerByConnectedServiceProvider();
   // New methods to accept or decline service requests
-  void acceptServiceRequest(Long serviceRequestId);
-  void declineServiceRequest(Long serviceRequestId);
+  void acceptServiceRequest(Long serviceRequestId) throws JsonProcessingException;
+  void declineServiceRequest(Long serviceRequestId) throws JsonProcessingException;
 
-  void withdrawApplication(Long serviceRequestId);
+  void withdrawApplication(Long serviceRequestId) throws JsonProcessingException;
   List<ServiceRequest> getAllServiceRequests();
   List<ServiceRequest> getServiceRequestsByCategory(Category category);
 
