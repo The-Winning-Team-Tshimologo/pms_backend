@@ -1,5 +1,7 @@
 package com.thewinningteam.pms.Service.ServiceImpl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thewinningteam.pms.DTO.CustomerServiceRequestedDTO;
 import com.thewinningteam.pms.DTO.RequestSystemWideDTO;
 import com.thewinningteam.pms.DTO.ServiceDTO;
@@ -12,11 +14,15 @@ import com.thewinningteam.pms.Service.ServiceRequestService;
 import com.thewinningteam.pms.exception.ServiceProviderNotFoundException;
 import com.thewinningteam.pms.mapper.ServiceMapper;
 import com.thewinningteam.pms.message.ChatMessage;
+import com.thewinningteam.pms.message.Notification;
+import com.thewinningteam.pms.message.NotificationStatus;
 import com.thewinningteam.pms.model.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
@@ -28,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Date;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -45,7 +52,9 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
     private final ServiceProviderRepository serviceProviderRepository;
     private final CategoryService categoryService;
     private final AppointmentRepository appointmentRepository;
-    private final SimpMessagingTemplate messagingTemplate;
+
+    private final ObjectMapper objectMapper;
+    private final JmsTemplate jmsTemplate;
 
     private static final Logger logger = LoggerFactory.getLogger(ServiceRequestServiceImpl.class);
 
@@ -62,7 +71,7 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
             Timestamp appointmentDate,
             String appointmentMessage
 
-    ) {
+    ) throws JsonProcessingException {
         Customer customer = getLoggedInCustomer(connectedUser);
 
         request.setCustomer(customer);
@@ -78,6 +87,17 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
         serviceRepository.save(request);
 
         saveAppointment(customer, request, appointmentDate, appointmentMessage);
+
+        // Send ActiveMQ notification
+        String notificationMessage = "Service has been requested "  ;
+        Notification notification = new Notification();
+        notification.setContent(notificationMessage);
+        notification.setSender(customer.getUsername());
+        notification.setTimestamp(LocalDateTime.now());
+        notification.setRecipient(serviceProvider.getUsername());
+        notification.setStatus(NotificationStatus.UNREAD);
+        String jsonMessage = objectMapper.writeValueAsString(notification);
+        jmsTemplate.convertAndSend("notificationQueue", jsonMessage);
     }
 
     // Method to create a service request system-wide (without a connected service provider)
@@ -225,7 +245,7 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
     }
 
     @Override
-    public void acceptServiceRequest(Long serviceRequestId) {
+    public void acceptServiceRequest(Long serviceRequestId) throws JsonProcessingException {
         // Get the authentication object from the security context
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -255,6 +275,18 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
 
                 // Save the updated service request
                 serviceRepository.save(serviceRequest);
+
+                // Send ActiveMQ notification
+                String notificationMessage = "Your service request of "+serviceRequest.getCategory().getName() + " has been accepted"  ;
+                Notification notification = new Notification();
+                notification.setContent(notificationMessage);
+                notification.setSender(serviceProvider.getUsername());
+                notification.setTimestamp(LocalDateTime.now());
+                notification.setRecipient(customer.getUsername());
+                notification.setStatus(NotificationStatus.UNREAD);
+                String jsonMessage = objectMapper.writeValueAsString(notification);
+                jmsTemplate.convertAndSend("notificationQueue", jsonMessage);
+
             } else {
                 // Handle the case where the service request with the given ID is not found
                 throw new IllegalArgumentException("Service request with ID " + serviceRequestId + " not found");
@@ -266,14 +298,17 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
     }
 
     @Override
-    public void declineServiceRequest(Long serviceRequestId) {
+    public void declineServiceRequest(Long serviceRequestId) throws JsonProcessingException {
         // Get the authentication object from the security context
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         // Check if the authentication object is not null and the user is authenticated
         if (authentication != null && authentication.isAuthenticated()) {
+
             // Retrieve the service provider from the authentication principal
             ServiceProvider serviceProvider = (ServiceProvider) authentication.getPrincipal();
+
+
             Long serviceProviderId = serviceProvider.getUserId();
 
             // Retrieve the service request by its ID
@@ -297,15 +332,18 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
                 // Save the updated service request
                 serviceRepository.save(serviceRequest);
 
-                // Send WebSocket notification
-                String notificationMessage = "Your service request has been declined.";
-                ChatMessage chatMessage = new ChatMessage();
-                chatMessage.setContent(notificationMessage);
-                chatMessage.setSender("System");
-                chatMessage.setRecipient(customer.getUsername()); // Assuming Customer has a username field
+                // Send ActiveMQ notification
+                String notificationMessage = "Your service request of "+serviceRequest.getCategory().getName() + " has been declined due to high demand / details not been found."  ;
+                Notification notification = new Notification();
+                notification.setContent(notificationMessage);
+                notification.setSender(serviceProvider.getUsername());
+                notification.setTimestamp(LocalDateTime.now());
+                notification.setRecipient(customer.getUsername());
+                notification.setStatus(NotificationStatus.UNREAD);
+                notification.setServiceRequestId(serviceRequest.getServiceId());
 
-                messagingTemplate.convertAndSendToUser(
-                        customer.getUsername(), "/topic/messages", chatMessage);
+                String jsonMessage = objectMapper.writeValueAsString(notification);
+                jmsTemplate.convertAndSend("notificationQueue", jsonMessage);
             } else {
                 // Handle the case where the service request with the given ID is not found
                 throw new IllegalArgumentException("Service request with ID " + serviceRequestId + " not found");
@@ -315,10 +353,9 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
             throw new RuntimeException("User not authenticated");
         }
     }
-    @Override
-    public void withdrawApplication(Long serviceRequestId)
 
-    {
+    @Override
+    public void withdrawApplication(Long serviceRequestId) throws JsonProcessingException {
         // Get the authentication object from the security context
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -356,6 +393,17 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
 
                 // Save the updated service request
                 serviceRepository.save(serviceRequest);
+
+                // Send ActiveMQ notification
+                String notificationMessage = "Your service request of "+serviceRequest.getCategory().getName() + " has been withdrawn"  ;
+                Notification notification = new Notification();
+                notification.setContent(notificationMessage);
+                notification.setSender(serviceProvider.getUsername());
+                notification.setTimestamp(LocalDateTime.now());
+                notification.setRecipient(customer.getUsername());
+                notification.setStatus(NotificationStatus.UNREAD);
+                String jsonMessage = objectMapper.writeValueAsString(notification);
+                jmsTemplate.convertAndSend("notificationQueue", jsonMessage);
             } else {
                 // Handle the case where the service request with the given ID is not found
                 throw new IllegalArgumentException("Service request with ID " + serviceRequestId + " not found");
