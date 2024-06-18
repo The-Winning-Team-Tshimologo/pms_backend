@@ -48,13 +48,13 @@ public interface ServiceRepository extends JpaRepository<ServiceRequest,Long> {
 
     ServiceRequest findByServiceIdAndServiceProviderUserId(Long serviceId, Long serviceProviderId);
 
-    @Query("SELECT new com.thewinningteam.pms.DTO.ServiceRequestWithAppointmentDTO(sr.serviceId, sr.pictures, sr.address, sr.description, sr.status, sr.customer, sr.category, a.appointmentDate) " +
+    @Query("SELECT new com.thewinningteam.pms.DTO.ServiceRequestWithAppointmentDTO(sr.serviceId, sr.pictures, sr.address, sr.description, sr.status, sr.customer, sr.category, a.appointmentDate, sr.completed) " +
             "FROM ServiceRequest sr " +
             "LEFT JOIN Appointment a ON sr.serviceId = a.service.serviceId " +
             "WHERE sr.serviceProvider.userId = :serviceProviderId")
     List<ServiceRequestWithAppointmentDTO> findServiceRequestsWithAppointmentByServiceProviderId(Long serviceProviderId);
 
-    @Query("SELECT new com.thewinningteam.pms.DTO.ServiceRequestWithAppointmentDTO(sr.serviceId, sr.pictures, sr.address, sr.description, sr.status, sr.customer, sr.category, a.appointmentDate) " +
+    @Query("SELECT new com.thewinningteam.pms.DTO.ServiceRequestWithAppointmentDTO(sr.serviceId, sr.pictures, sr.address, sr.description, sr.status, sr.customer, sr.category, a.appointmentDate, sr.completed) " +
             "FROM ServiceRequest sr " +
             "LEFT JOIN Appointment a ON sr.serviceId = a.service.serviceId " +
             "WHERE sr.serviceId = :serviceId")

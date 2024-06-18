@@ -22,6 +22,8 @@ public class ServiceRequestWithAppointmentDTO {
     private Customer customer;
     private Category category;
     private Date appointmentDate;
+    private boolean completed;
+
 
 
 }
