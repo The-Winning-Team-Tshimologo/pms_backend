@@ -50,5 +50,6 @@ public interface ServiceRequestService {
   long getTotalServiceRequests();
   void assignServiceProviderToCustomerService(Long serviceId, Long customerId);
     // Add more methods as needed
+    public List<CustomerServiceRequestedDTO> getAcceptedAndCompletedServiceRequestsForCustomer(Authentication connectedUser);
 }
 

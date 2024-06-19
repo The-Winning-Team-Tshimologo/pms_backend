@@ -31,12 +31,19 @@ public interface ServiceRepository extends JpaRepository<ServiceRequest,Long> {
     @Query("SELECT NEW com.thewinningteam.pms.DTO.RequestSystemWideDTO(s.customer.userId, s.customer.userName, s.serviceId, s.customer.profilePicture, s.address.streetName, s.address.city, SIZE(s.customer.reviews), s.customer.firstName, s.customer.lastName, s.category.name) FROM ServiceRequest s WHERE s.serviceProvider.userId IS NULL")
     List<RequestSystemWideDTO> findAllWithoutServiceProvider();
 
-    @Query("SELECT NEW com.thewinningteam.pms.DTO.CustomerServiceRequestedDTO(sp.firstName, sp.lastName, s.status, sp.profilePicture, a.appointmentDate) " +
+    @Query("SELECT NEW com.thewinningteam.pms.DTO.CustomerServiceRequestedDTO(s.serviceId, sp.firstName, sp.lastName, s.status, sp.profilePicture, a.appointmentDate,s.completed) " +
             "FROM ServiceRequest s " +
             "JOIN s.serviceProvider sp " +
             "JOIN Appointment a ON a.service = s " +
             "WHERE s.customer.userId = :customerId")
     List<CustomerServiceRequestedDTO> getCustomerServiceRequestedDTOByCustomerId( Long customerId);
+
+    @Query("SELECT NEW com.thewinningteam.pms.DTO.CustomerServiceRequestedDTO(s.serviceId, sp.firstName, sp.lastName, s.status, sp.profilePicture, a.appointmentDate, s.completed) " +
+            "FROM ServiceRequest s " +
+            "JOIN s.serviceProvider sp " +
+            "JOIN Appointment a ON a.service = s " +
+            "WHERE s.customer.userId = :customerId AND s.status = 'ACCEPTED' AND s.completed = true")
+    List<CustomerServiceRequestedDTO> getAcceptedAndCompletedServiceRequestsByCustomerId(Long customerId);
 
     @Query("SELECT COUNT(sr) FROM ServiceRequest sr")
     long countAllServiceRequests();

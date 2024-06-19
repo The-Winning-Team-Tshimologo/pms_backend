@@ -458,6 +458,12 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
         return serviceRepository.getCustomerServiceRequestedDTOByCustomerId(customer.getUserId());
     }
 
+    @Override
+    public List<CustomerServiceRequestedDTO> getAcceptedAndCompletedServiceRequestsForCustomer(Authentication connectedUser) {
+        Customer customer = (Customer) connectedUser.getPrincipal();
+        return serviceRepository.getAcceptedAndCompletedServiceRequestsByCustomerId(customer.getUserId());
+    }
+
 
     @Override
     public List<ServiceRequest> getAllServiceRequests() {

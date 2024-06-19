@@ -89,6 +89,12 @@ public class ServiceController {
         return ResponseEntity.ok(serviceRequests);
     }
 
+    @GetMapping("/customer/accepted-completed")
+    public ResponseEntity<List<CustomerServiceRequestedDTO>> getAcceptedAndCompletedServiceRequestsForConnectedCustomer(Authentication authentication) {
+        List<CustomerServiceRequestedDTO> serviceRequests = requestService.getAcceptedAndCompletedServiceRequestsForCustomer(authentication);
+        return ResponseEntity.ok(serviceRequests);
+    }
+
     @PostMapping("/create/{categoryId}")
     public ResponseEntity<?> createServiceRequest(
             @RequestParam("requestDTOData") String requestDTOData,
